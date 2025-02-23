@@ -13,7 +13,7 @@
 		"sources": "https://github.com/red-stoned/sharedinv",
 		"issues": "https://github.com/red-stoned/sharedinv/issues"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/sharedinv/icon.png",
 	"environment": "server",
 	"entrypoints": {
