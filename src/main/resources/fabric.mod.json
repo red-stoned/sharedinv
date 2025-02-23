@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "sharedinv",
+	"version": "${version}",
+	"name": "Shared Inventory",
+	"description": "",
+	"authors": [
+		"Galiano",
+		"Kroojel"
+	],
+	"contact": {
+		"homepage": "https://redstoned.dev",
+		"sources": "https://github.com/red-stoned/sharedinv",
+		"issues": "https://github.com/red-stoned/sharedinv/issues"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/sharedinv/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.redstoned.sharedinv.SharedInventory"
+		]
+	},
+	"mixins": [
+		"sharedinv.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "com.redstoned.sharedinv.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"PlayerInventoryMixin",
+		"ServerPlayerEntityMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
