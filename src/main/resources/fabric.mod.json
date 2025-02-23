@@ -15,7 +15,7 @@
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/sharedinv/icon.png",
-	"environment": "*",
+	"environment": "server",
 	"entrypoints": {
 		"main": [
 			"com.redstoned.sharedinv.SharedInventory"
