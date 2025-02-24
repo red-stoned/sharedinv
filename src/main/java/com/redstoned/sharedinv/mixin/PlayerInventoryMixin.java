@@ -11,10 +11,10 @@ import com.redstoned.sharedinv.SharedInventory;
 
 @Mixin(PlayerInventory.class)
 public class PlayerInventoryMixin {
-	@Shadow
-	public final DefaultedList<ItemStack> main = SharedInventory.main;
-	@Shadow
-	public final DefaultedList<ItemStack> armor = SharedInventory.armor;
-	@Shadow
-	public final DefaultedList<ItemStack> offHand = SharedInventory.offHand;
+	// @Shadow
+	// public final DefaultedList<ItemStack> main = SharedInventory.main;
+	// @Shadow
+	// public final DefaultedList<ItemStack> armor = SharedInventory.armor;
+	// @Shadow
+	// public final DefaultedList<ItemStack> offHand = SharedInventory.offHand;
 }
