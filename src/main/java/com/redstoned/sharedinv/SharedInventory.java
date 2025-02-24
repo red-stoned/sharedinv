@@ -1,143 +1,117 @@
 package com.redstoned.sharedinv;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.GameProfileArgumentType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtSizeTracker;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Util;
-import net.minecraft.util.collection.DefaultedList;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collection;
 import java.util.HashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.authlib.GameProfile;
-import com.mojang.brigadier.arguments.StringArgumentType;
 
-import static net.minecraft.server.command.CommandManager.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtHelper;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.util.collection.DefaultedList;
 
-public class SharedInventory implements ModInitializer {
-	public static final String MOD_ID = "sharedinv";
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+public class SharedInventory {
+	public static HashMap<UUID, SharedInventory> playerInvs = new HashMap<>();
 
-	public static HashMap<String, SharedInventoryTeam> teams = new HashMap<>();
+	public DefaultedList<ItemStack> main = DefaultedList.ofSize(36, ItemStack.EMPTY);
+	public DefaultedList<ItemStack> armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
+	public DefaultedList<ItemStack> offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
+	public List<DefaultedList<ItemStack>> combinedInventory = ImmutableList.of(this.main, this.armor, this.offHand);
 
-	public static DefaultedList<ItemStack> main = DefaultedList.ofSize(36, ItemStack.EMPTY);
-	public static DefaultedList<ItemStack> armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
-	public static DefaultedList<ItemStack> offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
+	public String name;
+	public Set<UUID> players = new HashSet<>();
 
-	@Override
-	public void onInitialize() {
-		// ServerLifecycleEvents.BEFORE_SAVE.register((server, flush, force) -> {
-		// 	Util.getIoWorkerExecutor().execute(() -> {
-		// 		try {
-		// 			NbtList l = writeNbt(server, new NbtList());
-		// 			NbtCompound n = new NbtCompound();
-		// 			n.put("i", l);
-					
-		// 			NbtIo.writeCompressed(n, server.getPath("world/sharedinv.nbt"));
-		// 		} catch (Exception e) {
-		// 			LOGGER.error("Failed to save Shared Inventory", e);
-		// 		}
-		// 	});
-		// });
-		// ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-		// 	Path ipath = server.getPath("world/sharedinv.nbt");
-		// 	if (!Files.exists(ipath)) {
-		// 		LOGGER.info("Could not find inventory state, starting empty.");
-		// 		return;
-		// 	};
-		// 	Util.getIoWorkerExecutor().execute(() -> {
-		// 		try {
-		// 			NbtCompound nbt = NbtIo.readCompressed(ipath, NbtSizeTracker.ofUnlimitedBytes());
-		// 			readNbt(server, nbt.getList("i", 10));
-		// 		} catch (Exception e) {
-		// 			LOGGER.error("Failed to load Shared Inventory", e);
-		// 		}
-		// 	});
-		// });
+	// both methods yoinked from PlayerInventory.class
+	public NbtList writeNbt(RegistryWrapper.WrapperLookup rm, NbtList nbtList) {
+		int i;
+		NbtCompound nbtCompound;
+		for(i = 0; i < main.size(); ++i) {
+			if (!((ItemStack)main.get(i)).isEmpty()) {
+				nbtCompound = new NbtCompound();
+				nbtCompound.putByte("Slot", (byte)i);
+				nbtList.add(((ItemStack)main.get(i)).toNbt(rm, nbtCompound));
+			}
+		}
 
-		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-			dispatcher.register(
-				literal("sharedinv")
-				.then(literal("add")
-					.then(argument("name", StringArgumentType.word())
-					.executes(context -> {
-						String team_name = StringArgumentType.getString(context, "name");
-						if (teams.get(team_name) != null) {
-							context.getSource().sendError(Text.translatable("commands.team.add.duplicate"));
-							return 0;
-						}
+		for(i = 0; i < armor.size(); ++i) {
+			if (!((ItemStack)armor.get(i)).isEmpty()) {
+				nbtCompound = new NbtCompound();
+				nbtCompound.putByte("Slot", (byte)(i + 100));
+				nbtList.add(((ItemStack)armor.get(i)).toNbt(rm, nbtCompound));
+			}
+		}
 
-						SharedInventoryTeam t1 = new SharedInventoryTeam(team_name);
-						teams.put(team_name, t1);
+		for(i = 0; i < offHand.size(); ++i) {
+			if (!((ItemStack)offHand.get(i)).isEmpty()) {
+				nbtCompound = new NbtCompound();
+				nbtCompound.putByte("Slot", (byte)(i + 150));
+				nbtList.add(((ItemStack)offHand.get(i)).toNbt(rm, nbtCompound));
+			}
+		}
+		return nbtList;
+   	}
 
-						context.getSource().sendFeedback(() -> {
-							return Text.translatable("commands.team.add.success", t1.name);
-						}, true);
+	public NbtCompound toNbt(RegistryWrapper.WrapperLookup rm, NbtCompound nbt) {
+		nbt.putString("name", this.name);
+		nbt.put("i", this.writeNbt(rm, new NbtList()));
+		NbtList nbtPlayerList = new NbtList();
+		players.stream().map(t -> NbtHelper.fromUuid(t)).forEach(t -> nbtPlayerList.add(t));
+		nbt.put("players", nbtPlayerList);
+		return nbt;
+	}
 
-						return 1;
-					})						
-					)
-				)
-				.then(literal("join")
-					.then(argument("team", StringArgumentType.string()).suggests((context, builder) -> CommandSource.suggestMatching(teams.keySet().toArray(new String[teams.keySet().size()]), builder))
-						.executes(context -> {
-							String team_name = StringArgumentType.getString(context, "team");
-							SharedInventoryTeam t = teams.get(team_name);
-							if (t == null) {
-								context.getSource().sendError(Text.translatable("team.notFound", team_name));
-								return 0;
-							}
-							t.AddPlayer(context.getSource().getPlayer().getUuid());
+	public SharedInventory(String name) {
+		this.name = name;
+	}
 
-							context.getSource().sendFeedback(() -> {
-								return Text.translatable("commands.team.join.success.single", context.getSource().getPlayer().getStyledDisplayName(), t.Name());
-							}, true);
 
-							return 1;
-						})
+	public static SharedInventory fromNbt(RegistryWrapper.WrapperLookup rm, NbtCompound nbt) {
+		SharedInventory t = new SharedInventory(nbt.getString("name"));
 
-						.then(argument("player", GameProfileArgumentType.gameProfile())
-							.executes(context -> {
-								String team_name = StringArgumentType.getString(context, "team");
-								if (teams.get(team_name) == null) {
-									context.getSource().sendError(Text.translatable("team.notFound", team_name));
-									return 0;
-								}
-								SharedInventoryTeam t = teams.get(team_name);
+		NbtList nbtPlayers = nbt.getList("players", 11);
+		for (int i = 0; i < nbtPlayers.size(); ++i) {
+			NbtElement ia = nbtPlayers.get(i);
+			UUID p = NbtHelper.toUuid(ia);
+			t.players.add(p);
+			SharedInventory.playerInvs.put(p, t);
+		}
 
-								Collection<GameProfile> prof = GameProfileArgumentType.getProfileArgument(context, "player");
-								
-								if (prof.size() == 1) {
-									context.getSource().sendFeedback(() -> {
-									   return Text.translatable("commands.team.join.success.single", new Object[]{getMemberName(members), t.Name()});
-									}, true);
-								 } else {
-									context.getSource().sendFeedback(() -> {
-									   return Text.translatable("commands.team.join.success.multiple", new Object[]{members.size(), t.Name()});
-									}, true);
-								 }
-								return 1;
-							})
-						)
-					)
-				)
-			);
-		});
+		NbtList nbtList = nbt.getList("i", 10);
+		for(int i = 0; i < nbtList.size(); ++i) {
+			NbtCompound nbtCompound = nbtList.getCompound(i);
+			int j = nbtCompound.getByte("Slot") & 255;
+			ItemStack itemStack = (ItemStack)ItemStack.fromNbt(rm, nbtCompound).orElse(ItemStack.EMPTY);
+			if (j >= 0 && j < t.main.size()) {
+				t.main.set(j, itemStack);
+			} else if (j >= 100 && j < t.armor.size() + 100) {
+				t.armor.set(j - 100, itemStack);
+			} else if (j >= 150 && j < t.offHand.size() + 150) {
+				t.offHand.set(j - 150, itemStack);
+			}
+		}
+		return t;
+	}
+
+	public void AddPlayer(UUID uuid) {
+		if (this.players.contains(uuid)) return;
+
+		SharedInventory existingInv = playerInvs.get(uuid);
+		if (existingInv != null) {
+			existingInv.RemovePlayer(uuid);
+		}
+
+		this.players.add(uuid);
+		playerInvs.put(uuid, this);
+	}
+
+	public void RemovePlayer(UUID uuid) {
+		Boolean removed = this.players.remove(uuid);
+		playerInvs.remove(uuid);
 	}
 }
