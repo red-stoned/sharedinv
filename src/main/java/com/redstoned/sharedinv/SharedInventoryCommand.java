@@ -48,6 +48,18 @@ public class SharedInventoryCommand {
 				.then(argument("inventory", StringArgumentType.string()).suggests((context, builder) -> CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder))
 				.executes(context -> {return executeListInventoryPlayers(context);}))
 				)
+				.then(literal("default")
+					.then(literal("set")
+					.then(argument("inventory", StringArgumentType.string()).suggests((context, builder) -> CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder))
+					.executes(context -> {return executeDefaultSet(context);}))
+					)
+					.then(literal("get")
+					.executes(context -> {return executeDefaultGet(context);})
+					)
+					.then(literal("remove")
+					.executes(context -> {return executeDefaultRemove(context);})
+					)
+				)
 				.then(literal("save")
 					.executes(context -> {
 						SharedInventoryMod.Save(context.getSource().getServer());
@@ -215,6 +227,48 @@ public class SharedInventoryCommand {
 			}, false);
 		}
 
+		return 1;
+	}
+
+	public static int executeDefaultSet(CommandContext<ServerCommandSource> context) {
+		String inv_name = StringArgumentType.getString(context, "inventory");
+		SharedInventory inv = SharedInventoryMod.inventories.get(inv_name);
+		if (inv == null) {
+			context.getSource().sendError(Text.literal(String.format("Unknown inventory '%s'", inv_name)));
+			return 0;
+		}
+
+		SharedInventoryMod.default_inv = inv;
+
+		context.getSource().sendFeedback(() -> {
+			return Text.literal("Set default shared inventory to: " + inv.name);
+		}, true);
+		return 1;
+	}
+
+	public static int executeDefaultGet(CommandContext<ServerCommandSource> context) {
+		if (SharedInventoryMod.default_inv != null) {
+			context.getSource().sendFeedback(() -> {
+				return Text.literal("The default inventory is: " + SharedInventoryMod.default_inv.name);
+			}, false);
+		} else {
+			context.getSource().sendFeedback(() -> {
+				return Text.literal("There is no default inventory.");
+			}, false);
+		}
+		return 1;
+	}
+
+	public static int executeDefaultRemove(CommandContext<ServerCommandSource> context) {
+		if (SharedInventoryMod.default_inv != null) {
+			SharedInventoryMod.default_inv = null;
+
+			context.getSource().sendFeedback(() -> {
+				return Text.literal("Removed default shared inventory");
+			}, true);
+		} else {
+			context.getSource().sendError(Text.literal("There is no default inventory to remove!"));
+		}
 		return 1;
 	}
 }

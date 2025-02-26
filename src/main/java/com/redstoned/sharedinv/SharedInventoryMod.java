@@ -36,6 +36,7 @@ public class SharedInventoryMod implements ModInitializer {
 
 	public static HashMap<String, SharedInventory> inventories = new HashMap<>();
 	public static HashMap<UUID, List<DefaultedList<ItemStack>>> original_inventories = new HashMap<>();
+	public static SharedInventory default_inv = null;
 
 	public static void UpdatePlayerSlots(SharedInventory inv, ServerPlayerEntity player) {
 		player.getInventory().main = inv.main;
@@ -71,6 +72,9 @@ public class SharedInventoryMod implements ModInitializer {
 			});
 
 			root.put("i", l);
+			if (default_inv != null) {
+				root.putString("d", default_inv.name);
+			}
 			
 			NbtIo.writeCompressed(root, server.getPath("world/sharedinv.nbt"));
 		} catch (Exception e) {
@@ -93,6 +97,13 @@ public class SharedInventoryMod implements ModInitializer {
 				LOGGER.info("[DEBUG] Loaded shared inv: " + inv.name);
 				inventories.put(inv.name, inv);
 			}
+
+			String def_name = nbt.getString("d");
+			SharedInventory def = inventories.get(def_name);
+			if (def_name != "" && def != null) {
+				default_inv = def;
+			}
+
 		} catch (Exception e) {
 			LOGGER.error("Failed to load Shared Inventory", e);
 		}
@@ -111,7 +122,13 @@ public class SharedInventoryMod implements ModInitializer {
 			original_inventories.put(handler.getPlayer().getUuid(), handler.getPlayer().getInventory().combinedInventory);
 
 			SharedInventory inv = SharedInventory.playerInvs.get(handler.getPlayer().getUuid());
-			if (inv == null) return;
+			if (inv == null) {
+				if (default_inv == null) return;
+				
+				default_inv.AddPlayer(handler.getPlayer().getUuid());
+				LOGGER.info(String.format("[DEBUG] Adding %s to default team %s", handler.getPlayer().getGameProfile().getName(), default_inv.name));
+				inv = default_inv;
+			}
 
 			UpdatePlayerSlots(inv, handler.getPlayer());
 		});
