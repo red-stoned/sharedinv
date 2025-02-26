@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -21,6 +22,8 @@ import net.minecraft.util.collection.DefaultedList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +35,7 @@ public class SharedInventoryMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static HashMap<String, SharedInventory> inventories = new HashMap<>();
+	public static HashMap<UUID, List<DefaultedList<ItemStack>>> original_inventories = new HashMap<>();
 
 	public static void UpdatePlayerSlots(SharedInventory inv, ServerPlayerEntity player) {
 		player.getInventory().main = inv.main;
@@ -40,14 +44,22 @@ public class SharedInventoryMod implements ModInitializer {
 		player.getInventory().combinedInventory = inv.combinedInventory;
 	}
 
-	public static void ResetPlayerSlots(ServerPlayerEntity player) {
+	public static void RestorePlayerSlots(PlayerEntity player) {
 		PlayerInventory i = player.getInventory();
-		i.main = DefaultedList.ofSize(36, ItemStack.EMPTY);
-		i.armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
-		i.offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
-		i.combinedInventory = ImmutableList.of(i.main, i.armor, i.offHand);
+		var original_inv = original_inventories.get(player.getUuid());
+		if (original_inv == null) {
+			LOGGER.info("[DEBUG] has no original inv");
+			i.main = DefaultedList.ofSize(36, ItemStack.EMPTY);
+			i.armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
+			i.offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
+			i.combinedInventory = ImmutableList.of(i.main, i.armor, i.offHand);
+		} else {
+			i.combinedInventory = original_inv;
+			i.main = original_inv.get(0);
+			i.armor = original_inv.get(1);
+			i.offHand = original_inv.get(2);
+		}
 	}
-	
 
 	public static void Save(MinecraftServer server) {
 		try {
@@ -96,6 +108,8 @@ public class SharedInventoryMod implements ModInitializer {
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+			original_inventories.put(handler.getPlayer().getUuid(), handler.getPlayer().getInventory().combinedInventory);
+
 			SharedInventory inv = SharedInventory.playerInvs.get(handler.getPlayer().getUuid());
 			if (inv == null) return;
 

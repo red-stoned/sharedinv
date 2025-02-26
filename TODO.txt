@@ -1,6 +1,4 @@
-- Replace all hijacked /team translatables with proper messages
-	- Long term, some other form of translation would be good
-- save items from before join: possibly prevent nbt write if player is in a shared inventory?
+- Long term, some other form of translation would be good
 - allow for a default shared group that is joined automatically for new players?
 - rename "unknown shared inventory" to "unknown inventory" and the like
 - let inventories be bound to mc teams (!!)

@@ -90,7 +90,7 @@ public class SharedInventoryCommand {
 			inv.RemovePlayer(u);
 			ServerPlayerEntity p = context.getSource().getServer().getPlayerManager().getPlayer(u);
 			if (p == null) return;
-			SharedInventoryMod.ResetPlayerSlots(p);
+			SharedInventoryMod.RestorePlayerSlots(p);
 		});
 		SharedInventoryMod.inventories.remove(inv_name);
 
@@ -152,7 +152,7 @@ public class SharedInventoryCommand {
 			if (inv == null) return;
 			inv.RemovePlayer(profile.getId());
 			ServerPlayerEntity s = context.getSource().getServer().getPlayerManager().getPlayer(profile.getId());
-			SharedInventoryMod.ResetPlayerSlots(s);
+			SharedInventoryMod.RestorePlayerSlots(s);
 		});
 		
 		if (profiles.size() == 1) {
