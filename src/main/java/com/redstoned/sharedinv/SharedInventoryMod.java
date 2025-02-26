@@ -54,10 +54,10 @@ public class SharedInventoryMod implements ModInitializer {
 			i.offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
 			i.combinedInventory = ImmutableList.of(i.main, i.armor, i.offHand);
 		} else {
-			i.combinedInventory = original_inv;
 			i.main = original_inv.get(0);
 			i.armor = original_inv.get(1);
 			i.offHand = original_inv.get(2);
+			i.combinedInventory = original_inv;
 		}
 	}
 
