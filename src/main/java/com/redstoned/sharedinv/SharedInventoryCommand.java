@@ -82,7 +82,7 @@ public class SharedInventoryCommand {
 		String inv_name = StringArgumentType.getString(context, "inventory");
 		SharedInventory inv = SharedInventoryMod.inventories.get(inv_name);
 		if (inv == null) {
-			context.getSource().sendError(Text.literal(String.format("Unknown shared inventory '%s'", inv_name)));
+			context.getSource().sendError(Text.literal(String.format("Unknown inventory '%s'", inv_name)));
 			return 0;
 		}
 
@@ -95,7 +95,7 @@ public class SharedInventoryCommand {
 		SharedInventoryMod.inventories.remove(inv_name);
 
 		context.getSource().sendFeedback(() -> {
-			return Text.literal(String.format("Removed shared inventory %s", inv_name));
+			return Text.literal(String.format("Removed inventory %s", inv_name));
 		}, true);
 
 		return 1;
@@ -105,7 +105,7 @@ public class SharedInventoryCommand {
 		String inv_name = StringArgumentType.getString(context, "inventory");
 		SharedInventory inv = SharedInventoryMod.inventories.get(inv_name);
 		if (inv == null) {
-			context.getSource().sendError(Text.literal(String.format("Unknown shared inventory '%s'", inv_name)));
+			context.getSource().sendError(Text.literal(String.format("Unknown inventory '%s'", inv_name)));
 			return 0;
 		}
 		
@@ -123,7 +123,7 @@ public class SharedInventoryCommand {
 		String inv_name = StringArgumentType.getString(context, "inventory");
 		SharedInventory inv = SharedInventoryMod.inventories.get(inv_name);
 		if (inv == null) {
-			context.getSource().sendError(Text.literal(String.format("Unknown shared inventory '%s'", inv_name)));
+			context.getSource().sendError(Text.literal(String.format("Unknown inventory '%s'", inv_name)));
 			return 0;
 		}
 
@@ -191,7 +191,7 @@ public class SharedInventoryCommand {
 		String inv_name = StringArgumentType.getString(context, "inventory");
 		SharedInventory inv = SharedInventoryMod.inventories.get(inv_name);
 		if (inv == null) {
-			context.getSource().sendError(Text.literal(String.format("Unknown shared inventory '%s'", inv_name)));
+			context.getSource().sendError(Text.literal(String.format("Unknown inventory '%s'", inv_name)));
 			return 0;
 		}
 
