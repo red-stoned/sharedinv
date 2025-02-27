@@ -1,6 +1,5 @@
 package com.redstoned.sharedinv;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,6 +7,8 @@ import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
 
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -17,7 +18,7 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.collection.DefaultedList;
 
 public class SharedInventory {
-	public static HashMap<UUID, SharedInventory> playerInvs = new HashMap<>();
+	public static Object2ReferenceMap<UUID, SharedInventory> playerInvs = new Object2ReferenceOpenHashMap<>();
 
 	public DefaultedList<ItemStack> main = DefaultedList.ofSize(36, ItemStack.EMPTY);
 	public DefaultedList<ItemStack> armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
@@ -111,7 +112,7 @@ public class SharedInventory {
 	}
 
 	public void RemovePlayer(UUID uuid) {
-		Boolean removed = this.players.remove(uuid);
+		this.players.remove(uuid);
 		playerInvs.remove(uuid);
 	}
 }

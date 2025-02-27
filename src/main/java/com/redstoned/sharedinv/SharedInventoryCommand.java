@@ -9,6 +9,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
@@ -20,6 +21,10 @@ import net.minecraft.text.Text;
 import static net.minecraft.server.command.CommandManager.*;
 
 public class SharedInventoryCommand {
+	public static SuggestionProvider<ServerCommandSource> inventories_provider = (context, builder) -> {
+		return CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder);
+	};
+
 	public static void register() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(
@@ -30,11 +35,11 @@ public class SharedInventoryCommand {
 				.then(literal("add").then(argument("name", StringArgumentType.word())
 				.executes(context -> {return executeAdd(context);}))
 				)
-				.then(literal("remove").then(argument("inventory", StringArgumentType.word()).suggests((context, builder) -> CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder))
+				.then(literal("remove").then(argument("inventory", StringArgumentType.word()).suggests(inventories_provider)
 				.executes(context -> {return executeRemove(context);}))
 				)
 				.then(literal("join")
-				.then(argument("inventory", StringArgumentType.string()).suggests((context, builder) -> CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder))
+				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
 				.executes(context -> {return executeJoinSelf(context);})
 				.then(argument("player", GameProfileArgumentType.gameProfile())
 				.executes(context -> {return executeJoinPlayers(context);})))
@@ -45,12 +50,12 @@ public class SharedInventoryCommand {
 				)
 				.then(literal("list")
 				.executes(context -> {return executeListInventories(context);})
-				.then(argument("inventory", StringArgumentType.string()).suggests((context, builder) -> CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder))
+				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
 				.executes(context -> {return executeListInventoryPlayers(context);}))
 				)
 				.then(literal("default")
 					.then(literal("set")
-					.then(argument("inventory", StringArgumentType.string()).suggests((context, builder) -> CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder))
+					.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
 					.executes(context -> {return executeDefaultSet(context);}))
 					)
 					.then(literal("get")

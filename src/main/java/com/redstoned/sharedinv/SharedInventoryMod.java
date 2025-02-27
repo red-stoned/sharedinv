@@ -1,16 +1,11 @@
 package com.redstoned.sharedinv;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtList;
@@ -21,7 +16,6 @@ import net.minecraft.util.collection.DefaultedList;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,12 +24,17 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+
 public class SharedInventoryMod implements ModInitializer {
 	public static final String MOD_ID = "sharedinv";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static HashMap<String, SharedInventory> inventories = new HashMap<>();
-	public static HashMap<UUID, List<DefaultedList<ItemStack>>> original_inventories = new HashMap<>();
+	public static Object2ObjectMap<String, SharedInventory> inventories = new Object2ObjectOpenHashMap<>();
+	public static Object2ReferenceMap<UUID, List<DefaultedList<ItemStack>>> original_inventories = new Object2ReferenceOpenHashMap<>();
 	public static SharedInventory default_inv = null;
 
 	public static void UpdatePlayerSlots(SharedInventory inv, ServerPlayerEntity player) {
