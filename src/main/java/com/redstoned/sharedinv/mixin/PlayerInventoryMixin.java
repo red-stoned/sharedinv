@@ -21,7 +21,7 @@ public class PlayerInventoryMixin {
 	@Inject(method = "writeNbt", at = @At("HEAD"))
 	private void inplaceOriginalInventoryOnWrite(NbtList nbtList, CallbackInfoReturnable<NbtList> ci) {
 		if (SharedInventory.playerInvs.containsKey(player.getUuid())) {
-			SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at begin write time, resetting their inv to point to the original");
+			// SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at begin write time, resetting their inv to point to the original");
 			SharedInventoryMod.RestorePlayerSlots(player);
 		}
 	}
@@ -30,7 +30,7 @@ public class PlayerInventoryMixin {
 	private void rejoinTeamAfterWriteInventory(NbtList nbtList, CallbackInfoReturnable<NbtList> ci) {
 		SharedInventory inv = SharedInventory.playerInvs.get(player.getUuid());
 		if (inv != null) {
-			SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at end write time, resetting their inv to point to the shared");
+			// SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at end write time, resetting their inv to point to the shared");
 			player.getInventory().main = inv.main;
 			player.getInventory().armor = inv.armor;
 			player.getInventory().offHand = inv.offHand;

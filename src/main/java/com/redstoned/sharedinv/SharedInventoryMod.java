@@ -48,7 +48,7 @@ public class SharedInventoryMod implements ModInitializer {
 		PlayerInventory i = player.getInventory();
 		var original_inv = original_inventories.get(player.getUuid());
 		if (original_inv == null) {
-			LOGGER.info("[DEBUG] has no original inv");
+			// LOGGER.info("[DEBUG] has no original inv");
 			i.main = DefaultedList.ofSize(36, ItemStack.EMPTY);
 			i.armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
 			i.offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
@@ -84,7 +84,7 @@ public class SharedInventoryMod implements ModInitializer {
 	private static void Load(MinecraftServer server) {
 		Path ipath = server.session.getDirectory().path().resolve("sharedinv.nbt");
 		if (!Files.exists(ipath)) {
-			LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
+			// LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
 
 			default_inv = new SharedInventory("default");
 			SharedInventoryMod.inventories.put(default_inv.name, default_inv);
@@ -97,7 +97,7 @@ public class SharedInventoryMod implements ModInitializer {
 			NbtList nt = nbt.getList("i", 10);
 			for (int i = 0; i < nt.size(); ++i) {
 				SharedInventory inv = SharedInventory.fromNbt(server.getRegistryManager(), nt.getCompound(i));
-				LOGGER.info("[DEBUG] Loaded shared inv: " + inv.name);
+				// LOGGER.info("[DEBUG] Loaded shared inv: " + inv.name);
 				inventories.put(inv.name, inv);
 			}
 
@@ -129,7 +129,7 @@ public class SharedInventoryMod implements ModInitializer {
 				if (default_inv == null) return;
 				
 				default_inv.AddPlayer(handler.getPlayer().getUuid());
-				LOGGER.info(String.format("[DEBUG] Adding %s to default team %s", handler.getPlayer().getGameProfile().getName(), default_inv.name));
+				// LOGGER.info(String.format("[DEBUG] Adding %s to default team %s", handler.getPlayer().getGameProfile().getName(), default_inv.name));
 				inv = default_inv;
 			}
 
@@ -138,7 +138,7 @@ public class SharedInventoryMod implements ModInitializer {
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			original_inventories.remove(handler.getPlayer().getUuid());
-			LOGGER.info("saved invs: " + original_inventories.size());
+			// LOGGER.info("saved invs: " + original_inventories.size());
 		});
 
 		SharedInventoryCommand.register();
