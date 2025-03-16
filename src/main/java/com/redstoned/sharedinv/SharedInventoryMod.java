@@ -75,14 +75,14 @@ public class SharedInventoryMod implements ModInitializer {
 				root.putString("d", default_inv.name);
 			}
 			
-			NbtIo.writeCompressed(root, server.getPath("world/sharedinv.nbt"));
+			NbtIo.writeCompressed(root, server.session.getDirectory().path().resolve("sharedinv.nbt"));
 		} catch (Exception e) {
 			LOGGER.error("Failed to save Shared Inventory", e);
 		}
 	}
 
 	private static void Load(MinecraftServer server) {
-		Path ipath = server.getPath("world/sharedinv.nbt");
+		Path ipath = server.session.getDirectory().path().resolve("sharedinv.nbt");
 		if (!Files.exists(ipath)) {
 			LOGGER.info("Could not find inventory state, starting empty.");
 			return;
@@ -130,6 +130,11 @@ public class SharedInventoryMod implements ModInitializer {
 			}
 
 			UpdatePlayerSlots(inv, handler.getPlayer());
+		});
+
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			original_inventories.remove(handler.getPlayer().getUuid());
+			LOGGER.info("saved invs: " + original_inventories.size());
 		});
 
 		SharedInventoryCommand.register();
