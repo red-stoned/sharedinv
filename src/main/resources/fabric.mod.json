@@ -15,7 +15,7 @@
 	},
 	"license": "MIT",
 	"icon": "assets/sharedinv/icon.png",
-	"environment": "server",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
 			"com.redstoned.sharedinv.SharedInventoryMod"

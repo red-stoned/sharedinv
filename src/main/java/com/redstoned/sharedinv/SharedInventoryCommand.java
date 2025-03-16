@@ -3,6 +3,7 @@ package com.redstoned.sharedinv;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.mojang.authlib.GameProfile;
@@ -103,12 +104,13 @@ public class SharedInventoryCommand {
 			return 0;
 		}
 
-		inv.players.forEach(u -> {
+		while (!inv.players.isEmpty()) {
+			UUID u = inv.players.iterator().next();
 			inv.RemovePlayer(u);
 			ServerPlayerEntity p = context.getSource().getServer().getPlayerManager().getPlayer(u);
-			if (p == null) return;
+			if (p == null) continue;
 			SharedInventoryMod.RestorePlayerSlots(p);
-		});
+		};
 		SharedInventoryMod.inventories.remove(inv_name);
 
 		context.getSource().sendFeedback(() -> {
