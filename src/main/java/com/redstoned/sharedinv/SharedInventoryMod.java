@@ -86,7 +86,7 @@ public class SharedInventoryMod implements ModInitializer {
 		if (!Files.exists(ipath)) {
 			// LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
 
-			default_inv = new SharedInventory("default");
+			default_inv = new SharedInventory("group_1");
 			SharedInventoryMod.inventories.put(default_inv.name, default_inv);
 
 			return;
