@@ -1,0 +1,4 @@
+- Long term, some other form of translation would be good
+- allow for a default shared group that is joined automatically for new players?
+- let inventories be bound to mc teams (!!)
+- import path cleanup

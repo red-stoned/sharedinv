@@ -15,10 +15,10 @@
 	},
 	"license": "MIT",
 	"icon": "assets/sharedinv/icon.png",
-	"environment": "server",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.redstoned.sharedinv.SharedInventory"
+			"com.redstoned.sharedinv.SharedInventoryMod"
 		]
 	},
 	"mixins": [
@@ -29,5 +29,6 @@
 		"minecraft": "~1.21.4",
 		"java": ">=21",
 		"fabric-api": "*"
-	}
+	},
+	"accessWidener": "sharedinv.aw"
 }
