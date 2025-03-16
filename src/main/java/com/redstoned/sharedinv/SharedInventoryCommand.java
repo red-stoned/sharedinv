@@ -17,7 +17,11 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.ClickEvent.Action;
 
 import static net.minecraft.server.command.CommandManager.*;
 
@@ -33,12 +37,25 @@ public class SharedInventoryCommand {
 				.requires(source -> {
 					return source.hasPermissionLevel(2);
 				})
+				.then(literal("help")
+				.executes(context -> {
+					context.getSource().sendFeedback(() -> {
+						return Text.literal("Find help at: ").append(Text.literal("https://modrinth.com/mod/sharedinv").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(Action.OPEN_URL, "https://modrinth.com/mod/sharedinv")).withUnderline(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Click to open the Shared Inventory mod page on Modrinth")))));
+					}, false);
+					return 1;
+				}))
+				.then(literal("group")
 				.then(literal("add").then(argument("name", StringArgumentType.word())
 				.executes(context -> {return executeAdd(context);}))
 				)
 				.then(literal("remove").then(argument("inventory", StringArgumentType.word()).suggests(inventories_provider)
 				.executes(context -> {return executeRemove(context);}))
 				)
+				.then(literal("list")
+				.executes(context -> {return executeListInventories(context);})
+				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
+				.executes(context -> {return executeListInventoryPlayers(context);}))
+				))
 				.then(literal("join")
 				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
 				.executes(context -> {return executeJoinSelf(context);})
@@ -49,11 +66,6 @@ public class SharedInventoryCommand {
 				.then(argument("player", GameProfileArgumentType.gameProfile())
 				.executes(context -> {return executeLeave(context);}))
 				)
-				.then(literal("list")
-				.executes(context -> {return executeListInventories(context);})
-				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
-				.executes(context -> {return executeListInventoryPlayers(context);}))
-				)
 				.then(literal("default")
 					.then(literal("set")
 					.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
@@ -62,18 +74,9 @@ public class SharedInventoryCommand {
 					.then(literal("get")
 					.executes(context -> {return executeDefaultGet(context);})
 					)
-					.then(literal("remove")
+					.then(literal("clear")
 					.executes(context -> {return executeDefaultRemove(context);})
 					)
-				)
-				.then(literal("save")
-					.executes(context -> {
-						SharedInventoryMod.Save(context.getSource().getServer());
-						context.getSource().sendFeedback(() -> {
-							return Text.literal("Saved all Shared Inventories");
-						}, true);
-						return 1;
-					})
 				)
 			);
 		});
@@ -87,7 +90,7 @@ public class SharedInventoryCommand {
 		}
 
 		SharedInventory inv = new SharedInventory(inv_name);
-		SharedInventoryMod.inventories.put(inv_name, inv);
+		SharedInventoryMod.inventories.put(inv.name, inv);
 
 		context.getSource().sendFeedback(() -> {
 			return Text.literal(String.format("Created inventory '%s'", inv.name));

@@ -84,7 +84,11 @@ public class SharedInventoryMod implements ModInitializer {
 	private static void Load(MinecraftServer server) {
 		Path ipath = server.session.getDirectory().path().resolve("sharedinv.nbt");
 		if (!Files.exists(ipath)) {
-			LOGGER.info("Could not find inventory state, starting empty.");
+			LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
+
+			default_inv = new SharedInventory("default");
+			SharedInventoryMod.inventories.put(default_inv.name, default_inv);
+
 			return;
 		};
 		
