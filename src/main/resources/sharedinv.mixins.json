@@ -3,7 +3,8 @@
 	"package": "com.redstoned.sharedinv.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"PlayerInventoryMixin"
+		"PlayerInventoryMixin",
+		"ServerPlayerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
