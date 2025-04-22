@@ -30,12 +30,12 @@ public class SharedInventoryMod implements ModInitializer {
 	public static Object2ReferenceMap<UUID, IPlayerInventory.SavedInventory> originalInventories = new Object2ReferenceOpenHashMap<>();
 	public static SharedInventory default_inv = null;
 
-    public static void RestorePlayerSlots(PlayerEntity player) {
+	public static void RestorePlayerSlots(PlayerEntity player) {
 		var originalInv = originalInventories.get(player.getUuid());
 		if (originalInv == null) {
-            player.getInventory().sharedinv$clear();
+			player.getInventory().sharedinv$clear();
 		} else {
-            player.getInventory().sharedinv$restore(originalInv);
+			player.getInventory().sharedinv$restore(originalInv);
 		}
 	}
 
@@ -111,8 +111,8 @@ public class SharedInventoryMod implements ModInitializer {
 				inv = default_inv;
 			}
 
-            handler.getPlayer().getInventory().sharedinv$updateFrom(inv);
-        });
+			handler.getPlayer().getInventory().sharedinv$updateFrom(inv);
+		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			originalInventories.remove(handler.getPlayer().getUuid());

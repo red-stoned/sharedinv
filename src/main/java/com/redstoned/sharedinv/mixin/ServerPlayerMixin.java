@@ -23,7 +23,7 @@ abstract public class ServerPlayerMixin extends PlayerEntity {
 	public void resetInvRefs(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
 		var inv = SharedInventory.playerInvs.get(oldPlayer.getUuid());
 		if (inv != null) {
-            getInventory().sharedinv$updateFrom(inv);
-        }
+			getInventory().sharedinv$updateFrom(inv);
+		}
 	}
 }

@@ -35,17 +35,15 @@ public class SharedInventoryCommand {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(
 				literal("sharedinv")
-				.requires(source -> {
-					return source.hasPermissionLevel(2);
-				})
+				.requires(source -> source.hasPermissionLevel(2))
 				.then(literal("help")
 				.executes(context -> {
 					context.getSource().sendFeedback(() -> {
 						return Text.literal("Find help at: ").append(Text.literal("https://modrinth.com/mod/sharedinv").setStyle(Style.EMPTY
-                                .withClickEvent(new ClickEvent.OpenUrl(URI.create("https://modrinth.com/mod/sharedinv")))
-                                .withUnderline(true)
-                                .withHoverEvent(new HoverEvent.ShowText(Text.literal("Click to open the Shared Inventory mod page on Modrinth")))
-                        ));
+								.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://modrinth.com/mod/sharedinv")))
+								.withUnderline(true)
+								.withHoverEvent(new HoverEvent.ShowText(Text.literal("Click to open the Shared Inventory mod page on Modrinth")))
+						));
 					}, false);
 					return 1;
 				}))
@@ -137,9 +135,9 @@ public class SharedInventoryCommand {
 		}
 		
 		inv.AddPlayer(context.getSource().getPlayer().getUuid());
-        context.getSource().getPlayer().getInventory().sharedinv$updateFrom(inv);
+		context.getSource().getPlayer().getInventory().sharedinv$updateFrom(inv);
 
-        context.getSource().sendFeedback(() -> {
+		context.getSource().sendFeedback(() -> {
 			return Text.literal(String.format("%s is now sharing the inventory '%s'", context.getSource().getPlayer().getGameProfile().getName(), inv.name));
 		}, true);
 
@@ -157,12 +155,12 @@ public class SharedInventoryCommand {
 		Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "player");
 		profiles.forEach(profile -> {
 			inv.AddPlayer(profile.getId());
-            context.getSource().getServer().getPlayerManager().getPlayer(profile.getId()).getInventory().sharedinv$updateFrom(inv);
-        });
+			context.getSource().getServer().getPlayerManager().getPlayer(profile.getId()).getInventory().sharedinv$updateFrom(inv);
+		});
 		
 		if (profiles.size() == 1) {
 			context.getSource().sendFeedback(() -> {
-				return Text.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().get().getName(), inv.name));
+				return Text.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().orElseThrow().getName(), inv.name));
 			}, true);
 		} else {
 			context.getSource().sendFeedback(() -> {
@@ -184,7 +182,7 @@ public class SharedInventoryCommand {
 		
 		if (profiles.size() == 1) {
 			context.getSource().sendFeedback(() -> {
-				return Text.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().get().getName()));
+				return Text.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().orElseThrow().getName()));
 			}, true);
 		} else {
 			context.getSource().sendFeedback(() -> {
@@ -207,7 +205,7 @@ public class SharedInventoryCommand {
 					inv_names.size() > 1 ? "are" : "is",
 					inv_names.size(),
 					inv_names.size() > 1 ? "inventories" : "inventory",
-					inv_names.stream().collect(Collectors.joining(", "))
+						String.join(", ", inv_names)
 				));
 			}, false);
 		}
