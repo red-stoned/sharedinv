@@ -19,7 +19,7 @@ repositories {
 }
 
 loom {
-	accessWidenerPath = file("src/main/resources/sharedinv.aw")
+	accessWidenerPath = file("src/main/resources/sharedinv.accesswidener")
 	splitEnvironmentSourceSets()
 
 	mods {

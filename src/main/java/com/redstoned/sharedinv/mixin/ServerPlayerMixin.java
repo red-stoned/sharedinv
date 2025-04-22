@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.authlib.GameProfile;
 import com.redstoned.sharedinv.SharedInventory;
-import com.redstoned.sharedinv.SharedInventoryMod;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -16,7 +15,6 @@ import net.minecraft.world.World;
 
 @Mixin(ServerPlayerEntity.class)
 abstract public class ServerPlayerMixin extends PlayerEntity {
-
 	public ServerPlayerMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
 		super(world, pos, yaw, gameProfile);
 	}
@@ -25,7 +23,7 @@ abstract public class ServerPlayerMixin extends PlayerEntity {
 	public void resetInvRefs(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
 		var inv = SharedInventory.playerInvs.get(oldPlayer.getUuid());
 		if (inv != null) {
-			SharedInventoryMod.UpdatePlayerSlots(inv, ((ServerPlayerEntity)(Object)this));
-		}
+            getInventory().sharedinv$updateFrom(inv);
+        }
 	}
 }

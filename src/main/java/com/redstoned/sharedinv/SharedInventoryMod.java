@@ -4,25 +4,18 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.collection.DefaultedList;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -34,30 +27,15 @@ public class SharedInventoryMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static Object2ObjectMap<String, SharedInventory> inventories = new Object2ObjectOpenHashMap<>();
-	public static Object2ReferenceMap<UUID, List<DefaultedList<ItemStack>>> original_inventories = new Object2ReferenceOpenHashMap<>();
+	public static Object2ReferenceMap<UUID, IPlayerInventory.SavedInventory> originalInventories = new Object2ReferenceOpenHashMap<>();
 	public static SharedInventory default_inv = null;
 
-	public static void UpdatePlayerSlots(SharedInventory inv, ServerPlayerEntity player) {
-		player.getInventory().main = inv.main;
-		player.getInventory().armor = inv.armor;
-		player.getInventory().offHand = inv.offHand;
-		player.getInventory().combinedInventory = inv.combinedInventory;
-	}
-
-	public static void RestorePlayerSlots(PlayerEntity player) {
-		PlayerInventory i = player.getInventory();
-		var original_inv = original_inventories.get(player.getUuid());
-		if (original_inv == null) {
-			// LOGGER.info("[DEBUG] has no original inv");
-			i.main = DefaultedList.ofSize(36, ItemStack.EMPTY);
-			i.armor = DefaultedList.ofSize(4, ItemStack.EMPTY);
-			i.offHand = DefaultedList.ofSize(1, ItemStack.EMPTY);
-			i.combinedInventory = ImmutableList.of(i.main, i.armor, i.offHand);
+    public static void RestorePlayerSlots(PlayerEntity player) {
+		var originalInv = originalInventories.get(player.getUuid());
+		if (originalInv == null) {
+            player.getInventory().sharedinv$clear();
 		} else {
-			i.main = original_inv.get(0);
-			i.armor = original_inv.get(1);
-			i.offHand = original_inv.get(2);
-			i.combinedInventory = original_inv;
+            player.getInventory().sharedinv$restore(originalInv);
 		}
 	}
 
@@ -94,16 +72,16 @@ public class SharedInventoryMod implements ModInitializer {
 		
 		try {
 			NbtCompound nbt = NbtIo.readCompressed(ipath, NbtSizeTracker.ofUnlimitedBytes());
-			NbtList nt = nbt.getList("i", 10);
+			NbtList nt = nbt.getList("i").orElseThrow();
 			for (int i = 0; i < nt.size(); ++i) {
-				SharedInventory inv = SharedInventory.fromNbt(server.getRegistryManager(), nt.getCompound(i));
+				SharedInventory inv = SharedInventory.fromNbt(server.getRegistryManager(), nt.getCompound(i).orElseThrow());
 				// LOGGER.info("[DEBUG] Loaded shared inv: " + inv.name);
 				inventories.put(inv.name, inv);
 			}
 
-			String def_name = nbt.getString("d");
+			String def_name = nbt.getString("d").orElseThrow();
 			SharedInventory def = inventories.get(def_name);
-			if (def_name != "" && def != null) {
+			if (!def_name.isEmpty() && def != null) {
 				default_inv = def;
 			}
 
@@ -122,7 +100,7 @@ public class SharedInventoryMod implements ModInitializer {
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-			original_inventories.put(handler.getPlayer().getUuid(), handler.getPlayer().getInventory().combinedInventory);
+			originalInventories.put(handler.getPlayer().getUuid(), handler.getPlayer().getInventory().sharedinv$save());
 
 			SharedInventory inv = SharedInventory.playerInvs.get(handler.getPlayer().getUuid());
 			if (inv == null) {
@@ -133,11 +111,11 @@ public class SharedInventoryMod implements ModInitializer {
 				inv = default_inv;
 			}
 
-			UpdatePlayerSlots(inv, handler.getPlayer());
-		});
+            handler.getPlayer().getInventory().sharedinv$updateFrom(inv);
+        });
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-			original_inventories.remove(handler.getPlayer().getUuid());
+			originalInventories.remove(handler.getPlayer().getUuid());
 			// LOGGER.info("saved invs: " + original_inventories.size());
 		});
 
