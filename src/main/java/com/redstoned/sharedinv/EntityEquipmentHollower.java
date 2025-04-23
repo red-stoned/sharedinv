@@ -119,7 +119,7 @@ public class EntityEquipmentHollower implements Opcodes {
 
 		Class<?> clazz = lookup.defineClass(cw.toByteArray());
 
-		Files.write(Path.of("x.class"), cw.toByteArray());
+		//Files.write(Path.of("x.class"), cw.toByteArray());
 
 		return (Wrap) LambdaMetafactory.metafactory(
 				lookup,
