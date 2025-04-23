@@ -22,7 +22,6 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.ClickEvent.Action;
 
 import static net.minecraft.server.command.CommandManager.*;
 

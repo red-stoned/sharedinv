@@ -1,2 +1,4 @@
 accessWidener v2 named
+accessible method net/minecraft/entity/EntityEquipment <init> (Ljava/util/EnumMap;)V
+accessible field net/minecraft/entity/EntityEquipment map Ljava/util/EnumMap;
 accessible field net/minecraft/server/MinecraftServer session Lnet/minecraft/world/level/storage/LevelStorage$Session;

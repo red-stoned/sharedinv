@@ -36,6 +36,7 @@ public class SharedInventory {
 			}
 		}
 		for (EquipmentSlot entry : PlayerInventory.EQUIPMENT_SLOTS.values()) {
+			if (entry == EquipmentSlot.MAINHAND) continue; // This is overwritten for players
 			ItemStack stack = shared.equipment().get(entry);
 			if (!stack.isEmpty()) {
 				NbtCompound nbtCompound = new NbtCompound();
@@ -65,8 +66,8 @@ public class SharedInventory {
 	public SharedInventory(String name) {
 		this.name = name;
 
-        // OFFHAND is handled separately, this is just for armor slots
-        // MAINHAND is not handled since PlayerEquipment overwrites that with the selected main inventory slot
+		// OFFHAND is handled separately, this is just for armor slots
+		// MAINHAND is not handled since PlayerEquipment overwrites that with the selected main inventory slot
 		List<EquipmentSlot> list = Arrays.stream(EquipmentSlot.values())
 				.filter(s -> s.getType() == EquipmentSlot.Type.HUMANOID_ARMOR)
 				.toList();

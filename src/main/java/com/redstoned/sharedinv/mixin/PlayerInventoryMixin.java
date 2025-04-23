@@ -1,16 +1,14 @@
 package com.redstoned.sharedinv.mixin;
 
-import com.redstoned.sharedinv.IPlayerInventory;
+import com.redstoned.sharedinv.*;
 import net.minecraft.entity.EntityEquipment;
+import net.minecraft.entity.player.PlayerEquipment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.collection.DefaultedList;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import com.redstoned.sharedinv.SharedInventory;
-import com.redstoned.sharedinv.SharedInventoryMod;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -41,13 +39,16 @@ public class PlayerInventoryMixin implements IPlayerInventory {
 
 	@Override
 	public void sharedinv$updateFrom(SharedInventory inv) {
-		sharedinv$restore(inv.shared);
+		sharedinv$restore(new SavedInventory(
+				inv.shared.main(),
+				EntityEquipmentHollower.wrap(inv.shared.equipment(), player)
+		));
 	}
 
 	@Override
 	public void sharedinv$clear() {
 		this.main = DefaultedList.ofSize(36, ItemStack.EMPTY);
-		this.equipment = new EntityEquipment();
+		this.equipment = new PlayerEquipment(player);
 	}
 
 	@Override
@@ -59,5 +60,6 @@ public class PlayerInventoryMixin implements IPlayerInventory {
 	public void sharedinv$restore(SavedInventory inventory) {
 		this.main = inventory.main();
 		this.equipment = inventory.equipment();
+		this.player.setEquipment(inventory.equipment());
 	}
 }
