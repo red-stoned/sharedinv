@@ -30,5 +30,11 @@
 		"java": ">=21",
 		"fabric-api": "*"
 	},
-	"accessWidener": "sharedinv.aw"
+	"accessWidener": "sharedinv.accesswidener",
+	"custom": {
+		"loom:injected_interfaces": {
+			"net/minecraft/class_1661": ["com/redstoned/sharedinv/IPlayerInventory"],
+			"net/minecraft/class_1309": ["com/redstoned/sharedinv/mixin/LivingEntityAccessor"]
+		}
+	}
 }

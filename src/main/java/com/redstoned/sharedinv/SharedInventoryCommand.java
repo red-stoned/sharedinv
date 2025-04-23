@@ -1,5 +1,6 @@
 package com.redstoned.sharedinv;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -21,61 +22,62 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.ClickEvent.Action;
 
 import static net.minecraft.server.command.CommandManager.*;
 
 public class SharedInventoryCommand {
 	public static SuggestionProvider<ServerCommandSource> inventories_provider = (context, builder) -> {
-		return CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(new String[SharedInventoryMod.inventories.keySet().size()]), builder);
+		return CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(String[]::new), builder);
 	};
 
 	public static void register() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(
 				literal("sharedinv")
-				.requires(source -> {
-					return source.hasPermissionLevel(2);
-				})
+				.requires(source -> source.hasPermissionLevel(2))
 				.then(literal("help")
 				.executes(context -> {
 					context.getSource().sendFeedback(() -> {
-						return Text.literal("Find help at: ").append(Text.literal("https://modrinth.com/mod/sharedinv").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(Action.OPEN_URL, "https://modrinth.com/mod/sharedinv")).withUnderline(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Click to open the Shared Inventory mod page on Modrinth")))));
+						return Text.literal("Find help at: ").append(Text.literal("https://modrinth.com/mod/sharedinv").setStyle(Style.EMPTY
+								.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://modrinth.com/mod/sharedinv")))
+								.withUnderline(true)
+								.withHoverEvent(new HoverEvent.ShowText(Text.literal("Click to open the Shared Inventory mod page on Modrinth")))
+						));
 					}, false);
 					return 1;
 				}))
 				.then(literal("group")
 				.then(literal("add").then(argument("name", StringArgumentType.word())
-				.executes(context -> {return executeAdd(context);}))
+				.executes(SharedInventoryCommand::executeAdd))
 				)
 				.then(literal("remove").then(argument("inventory", StringArgumentType.word()).suggests(inventories_provider)
-				.executes(context -> {return executeRemove(context);}))
+				.executes(SharedInventoryCommand::executeRemove))
 				)
 				.then(literal("list")
-				.executes(context -> {return executeListInventories(context);})
+				.executes(SharedInventoryCommand::executeListInventories)
 				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
-				.executes(context -> {return executeListInventoryPlayers(context);}))
+				.executes(SharedInventoryCommand::executeListInventoryPlayers))
 				))
 				.then(literal("join")
 				.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
-				.executes(context -> {return executeJoinSelf(context);})
+				.executes(SharedInventoryCommand::executeJoinSelf)
 				.then(argument("player", GameProfileArgumentType.gameProfile())
-				.executes(context -> {return executeJoinPlayers(context);})))
+				.executes(SharedInventoryCommand::executeJoinPlayers)))
 				)
 				.then(literal("leave")
 				.then(argument("player", GameProfileArgumentType.gameProfile())
-				.executes(context -> {return executeLeave(context);}))
+				.executes(SharedInventoryCommand::executeLeave))
 				)
 				.then(literal("default")
 					.then(literal("set")
 					.then(argument("inventory", StringArgumentType.string()).suggests(inventories_provider)
-					.executes(context -> {return executeDefaultSet(context);}))
+					.executes(SharedInventoryCommand::executeDefaultSet))
 					)
 					.then(literal("get")
-					.executes(context -> {return executeDefaultGet(context);})
+					.executes(SharedInventoryCommand::executeDefaultGet)
 					)
 					.then(literal("clear")
-					.executes(context -> {return executeDefaultRemove(context);})
+					.executes(SharedInventoryCommand::executeDefaultRemove)
 					)
 				)
 			);
@@ -132,7 +134,7 @@ public class SharedInventoryCommand {
 		}
 		
 		inv.AddPlayer(context.getSource().getPlayer().getUuid());
-		SharedInventoryMod.UpdatePlayerSlots(inv, context.getSource().getPlayer());
+		context.getSource().getPlayer().getInventory().sharedinv$updateFrom(inv);
 
 		context.getSource().sendFeedback(() -> {
 			return Text.literal(String.format("%s is now sharing the inventory '%s'", context.getSource().getPlayer().getGameProfile().getName(), inv.name));
@@ -152,12 +154,12 @@ public class SharedInventoryCommand {
 		Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "player");
 		profiles.forEach(profile -> {
 			inv.AddPlayer(profile.getId());
-			SharedInventoryMod.UpdatePlayerSlots(inv, context.getSource().getServer().getPlayerManager().getPlayer(profile.getId()));
+			context.getSource().getServer().getPlayerManager().getPlayer(profile.getId()).getInventory().sharedinv$updateFrom(inv);
 		});
 		
 		if (profiles.size() == 1) {
 			context.getSource().sendFeedback(() -> {
-				return Text.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().get().getName(), inv.name));
+				return Text.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().orElseThrow().getName(), inv.name));
 			}, true);
 		} else {
 			context.getSource().sendFeedback(() -> {
@@ -179,7 +181,7 @@ public class SharedInventoryCommand {
 		
 		if (profiles.size() == 1) {
 			context.getSource().sendFeedback(() -> {
-				return Text.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().get().getName()));
+				return Text.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().orElseThrow().getName()));
 			}, true);
 		} else {
 			context.getSource().sendFeedback(() -> {
@@ -202,7 +204,7 @@ public class SharedInventoryCommand {
 					inv_names.size() > 1 ? "are" : "is",
 					inv_names.size(),
 					inv_names.size() > 1 ? "inventories" : "inventory",
-					inv_names.stream().collect(Collectors.joining(", "))
+						String.join(", ", inv_names)
 				));
 			}, false);
 		}

@@ -1,22 +1,24 @@
 package com.redstoned.sharedinv.mixin;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import com.redstoned.sharedinv.*;
+import net.minecraft.entity.EntityEquipment;
+import net.minecraft.entity.player.PlayerEquipment;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.collection.DefaultedList;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import com.redstoned.sharedinv.SharedInventory;
-import com.redstoned.sharedinv.SharedInventoryMod;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.NbtList;
 
 @Mixin(PlayerInventory.class)
-public class PlayerInventoryMixin {
-	@Shadow
-	PlayerEntity player;
+public class PlayerInventoryMixin implements IPlayerInventory {
+	@Final @Shadow public PlayerEntity player;
+	@Mutable @Final @Shadow private DefaultedList<ItemStack> main;
+	@Mutable @Shadow @Final private EntityEquipment equipment;
 
 	@Inject(method = "writeNbt", at = @At("HEAD"))
 	private void inplaceOriginalInventoryOnWrite(NbtList nbtList, CallbackInfoReturnable<NbtList> ci) {
@@ -31,10 +33,33 @@ public class PlayerInventoryMixin {
 		SharedInventory inv = SharedInventory.playerInvs.get(player.getUuid());
 		if (inv != null) {
 			// SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at end write time, resetting their inv to point to the shared");
-			player.getInventory().main = inv.main;
-			player.getInventory().armor = inv.armor;
-			player.getInventory().offHand = inv.offHand;
-			player.getInventory().combinedInventory = inv.combinedInventory;
+			player.getInventory().sharedinv$updateFrom(inv);
 		}
+	}
+
+	@Override
+	public void sharedinv$updateFrom(SharedInventory inv) {
+		sharedinv$restore(new SavedInventory(
+				inv.shared.main(),
+				EntityEquipmentHollower.wrap(inv.shared.equipment(), player)
+		));
+	}
+
+	@Override
+	public void sharedinv$clear() {
+		this.main = DefaultedList.ofSize(36, ItemStack.EMPTY);
+		this.equipment = new PlayerEquipment(player);
+	}
+
+	@Override
+	public SavedInventory sharedinv$save() {
+		return new SavedInventory(this.main, this.equipment);
+	}
+
+	@Override
+	public void sharedinv$restore(SavedInventory inventory) {
+		this.main = inventory.main();
+		this.equipment = inventory.equipment();
+		this.player.setEquipment(inventory.equipment());
 	}
 }
