@@ -13,8 +13,6 @@ import org.objectweb.asm.Opcodes;
 import java.lang.invoke.*;
 import java.lang.reflect.AccessFlag;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class EntityEquipmentHollower implements Opcodes {
@@ -86,32 +84,40 @@ public class EntityEquipmentHollower implements Opcodes {
 		mw.visitMaxs(3, 3);
 		mw.visitEnd();
 
+		Set<String> unhandledMethods = new HashSet<>(handled.keySet());
+
 		for (Method method : methods) {
 			String desc = desc(method.getReturnType(), method.getParameterTypes());
 			mw = cw.visitMethod(ACC_PUBLIC, method.getName(), desc, null, null);
 			mw.visitCode();
-			if (!handled.containsKey(method.getName())) {
+			String handler = handled.get(method.getName());
+			if (handler == null) {
 				mw.visitVarInsn(ALOAD, 0);
 				mw.visitFieldInsn(GETFIELD, cn, "delegate", lname(EntityEquipment.class));
 			}
 			for (int i = 0; i < method.getParameterCount(); i++) {
 				mw.visitVarInsn(ALOAD, i + 1);
 			}
-			if (handled.containsKey(method.getName())) {
+			if (handler == null) {
+				mw.visitMethodInsn(INVOKEVIRTUAL, name(EntityEquipment.class), method.getName(), desc, false);
+			} else {
 				mw.visitVarInsn(ALOAD, 0);
 				mw.visitFieldInsn(GETFIELD, cn, "delegate", lname(EntityEquipment.class));
 				mw.visitVarInsn(ALOAD, 0);
 				mw.visitFieldInsn(GETFIELD, cn, "player", lname(PlayerEntity.class));
 				String hdesc = desc.replace(")", lname(EntityEquipment.class) + lname(PlayerEntity.class) + ")");
-				mw.visitMethodInsn(INVOKESTATIC, name(EntityEquipmentHollower.class), method.getName(), hdesc, false);
-			} else {
-				mw.visitMethodInsn(INVOKEVIRTUAL, name(EntityEquipment.class), method.getName(), desc, false);
+				mw.visitMethodInsn(INVOKESTATIC, name(EntityEquipmentHollower.class), handler, hdesc, false);
+				unhandledMethods.remove(method.getName());
 			}
 			if (method.getReturnType().equals(boolean.class)) mw.visitInsn(IRETURN);
 			else if (method.getReturnType().equals(void.class)) mw.visitInsn(RETURN);
 			else mw.visitInsn(ARETURN);
 			mw.visitMaxs(method.getParameterCount() + 2, method.getParameterCount() + 1);
 			mw.visitEnd();
+		}
+
+		if (!unhandledMethods.isEmpty()) {
+			throw new RuntimeException("Unhandled methods: " + unhandledMethods);
 		}
 
 		cw.visitEnd();
@@ -150,9 +156,9 @@ public class EntityEquipmentHollower implements Opcodes {
 
 	// This mirrors the methods in PlayerEquipment but with the player injected later
 	private static final Map<String, String> handled = Map.of(
-			"put", mapMethod("method_66660", desc(ItemStack.class, EquipmentSlot.class, ItemStack.class)),
-			"get", mapMethod("method_66659", desc(ItemStack.class, EquipmentSlot.class)),
-			"isEmpty", mapMethod("method_66657", desc(boolean.class))
+			mapMethod("method_66660", desc(ItemStack.class, EquipmentSlot.class, ItemStack.class)), "put",
+			mapMethod("method_66659", desc(ItemStack.class, EquipmentSlot.class)), "get",
+			mapMethod("method_66657", desc(boolean.class)), "isEmpty"
 	);
 
 	public static ItemStack put(EquipmentSlot slot, ItemStack stack, EntityEquipment delegate, PlayerEntity player) {
