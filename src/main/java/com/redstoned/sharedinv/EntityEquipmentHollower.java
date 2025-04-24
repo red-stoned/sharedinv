@@ -84,7 +84,7 @@ public class EntityEquipmentHollower implements Opcodes {
 		mw.visitMaxs(3, 3);
 		mw.visitEnd();
 
-		Set<String> unhandledMethods = new HashSet<>(handled.keySet());
+		Set<String> unhandledMethods = new HashSet<>(handled.values());
 
 		for (Method method : methods) {
 			String desc = desc(method.getReturnType(), method.getParameterTypes());
@@ -107,7 +107,7 @@ public class EntityEquipmentHollower implements Opcodes {
 				mw.visitFieldInsn(GETFIELD, cn, "player", lname(PlayerEntity.class));
 				String hdesc = desc.replace(")", lname(EntityEquipment.class) + lname(PlayerEntity.class) + ")");
 				mw.visitMethodInsn(INVOKESTATIC, name(EntityEquipmentHollower.class), handler, hdesc, false);
-				unhandledMethods.remove(method.getName());
+				unhandledMethods.remove(handler);
 			}
 			if (method.getReturnType().equals(boolean.class)) mw.visitInsn(IRETURN);
 			else if (method.getReturnType().equals(void.class)) mw.visitInsn(RETURN);
