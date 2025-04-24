@@ -1,3 +1,5 @@
+import net.fabricmc.loom.task.prod.ServerProductionRunTask
+
 plugins {
 	id 'fabric-loom' version '1.10-SNAPSHOT'
 	id 'maven-publish'
@@ -39,6 +41,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	
 }
 
@@ -70,6 +73,10 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${inputs.properties.archivesName}"}
 	}
+}
+
+tasks.register("runProdServer", ServerProductionRunTask) {
+	installerVersion = "1.0.3"
 }
 
 // configure the maven publication
