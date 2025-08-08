@@ -15,8 +15,10 @@ import net.minecraft.world.World;
 
 @Mixin(ServerPlayerEntity.class)
 abstract public class ServerPlayerMixin extends PlayerEntity {
-	public ServerPlayerMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
-		super(world, pos, yaw, gameProfile);
+
+	public ServerPlayerMixin(World world, GameProfile gameProfile) {
+		super(world, gameProfile);
+		//TODO Auto-generated constructor stub
 	}
 
 	@Inject(method = "copyFrom", at = @At("TAIL"))
