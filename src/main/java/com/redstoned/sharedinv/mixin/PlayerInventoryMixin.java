@@ -1,5 +1,6 @@
 package com.redstoned.sharedinv.mixin;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,8 +16,9 @@ import net.minecraft.nbt.NbtList;
 
 @Mixin(PlayerInventory.class)
 public class PlayerInventoryMixin {
+	@Final
 	@Shadow
-	PlayerEntity player;
+    public PlayerEntity player;
 
 	@Inject(method = "writeNbt", at = @At("HEAD"))
 	private void inplaceOriginalInventoryOnWrite(NbtList nbtList, CallbackInfoReturnable<NbtList> ci) {

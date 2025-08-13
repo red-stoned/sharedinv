@@ -36,7 +36,7 @@ public class SharedInventory {
 			if (!((ItemStack)main.get(i)).isEmpty()) {
 				nbtCompound = new NbtCompound();
 				nbtCompound.putByte("Slot", (byte)i);
-				nbtList.add(((ItemStack)main.get(i)).toNbt(rm, nbtCompound));
+				nbtList.add(((ItemStack)main.get(i)).encode(rm, nbtCompound));
 			}
 		}
 
@@ -44,7 +44,7 @@ public class SharedInventory {
 			if (!((ItemStack)armor.get(i)).isEmpty()) {
 				nbtCompound = new NbtCompound();
 				nbtCompound.putByte("Slot", (byte)(i + 100));
-				nbtList.add(((ItemStack)armor.get(i)).toNbt(rm, nbtCompound));
+				nbtList.add(((ItemStack)armor.get(i)).encode(rm, nbtCompound));
 			}
 		}
 
@@ -52,7 +52,7 @@ public class SharedInventory {
 			if (!((ItemStack)offHand.get(i)).isEmpty()) {
 				nbtCompound = new NbtCompound();
 				nbtCompound.putByte("Slot", (byte)(i + 150));
-				nbtList.add(((ItemStack)offHand.get(i)).toNbt(rm, nbtCompound));
+				nbtList.add(((ItemStack)offHand.get(i)).encode(rm, nbtCompound));
 			}
 		}
 		return nbtList;
