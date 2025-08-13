@@ -136,11 +136,6 @@ public class SharedInventoryMod implements ModInitializer {
 			UpdatePlayerSlots(inv, handler.getPlayer());
 		});
 
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-			original_inventories.remove(handler.getPlayer().getUuid());
-			// LOGGER.info("saved invs: " + original_inventories.size());
-		});
-
 		SharedInventoryCommand.register();
 	}
 }
