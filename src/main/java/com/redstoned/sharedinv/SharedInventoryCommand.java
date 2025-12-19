@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.PlayerConfigEntry;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
@@ -32,11 +33,13 @@ public class SharedInventoryCommand {
 		return CommandSource.suggestMatching(SharedInventoryMod.inventories.keySet().toArray(String[]::new), builder);
 	};
 
+	
+
 	public static void register() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(
 				literal("sharedinv")
-				.requires(source -> source.hasPermissionLevel(2))
+				.requires(CommandManager.requirePermissionLevel(CommandManager.MODERATORS_CHECK))
 				.then(literal("help")
 				.executes(context -> {
 					context.getSource().sendFeedback(() -> {
