@@ -2,6 +2,7 @@ package com.redstoned.sharedinv.mixin;
 
 import com.redstoned.sharedinv.*;
 import net.minecraft.entity.EntityEquipment;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEquipment;
 import net.minecraft.inventory.StackWithSlot;
 import net.minecraft.item.ItemStack;
@@ -61,6 +62,6 @@ public class PlayerInventoryMixin implements IPlayerInventory {
 	public void sharedinv$restore(SavedInventory inventory) {
 		this.main = inventory.main();
 		this.equipment = inventory.equipment();
-		this.player.setEquipment(inventory.equipment());
+		((LivingEntity)this.player).setEquipment(inventory.equipment());
 	}
 }
