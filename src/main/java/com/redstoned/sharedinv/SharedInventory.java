@@ -32,7 +32,7 @@ public class SharedInventory {
 			if (!stack.isEmpty()) {
 				NbtCompound nbtCompound = new NbtCompound();
 				nbtCompound.putByte("Slot", (byte) i);
-				nbtList.add(stack.toNbt(rm, nbtCompound));
+				nbtList.add(new ItemStackNbt(stack).toNbt(rm, nbtCompound));
 			}
 		}
 		for (EquipmentSlot entry : PlayerInventory.EQUIPMENT_SLOTS.values()) {
@@ -44,7 +44,7 @@ public class SharedInventory {
 				if (entry == EquipmentSlot.OFFHAND) slot = (byte) 150;
 				else slot = (byte) (entry.getEntitySlotId() + 100);
 				nbtCompound.putByte("Slot", slot);
-				nbtList.add(stack.toNbt(rm, nbtCompound));
+				nbtList.add(new ItemStackNbt(stack).toNbt(rm, nbtCompound));
 			}
 		}
 		return nbtList;
@@ -95,7 +95,7 @@ public class SharedInventory {
 		for (NbtElement element : nbtList) {
 			NbtCompound compound = element.asCompound().orElseThrow();
 			int j = compound.getByte("Slot").orElseThrow() & 255;
-			ItemStack itemStack = ItemStack.fromNbt(rm, compound).orElse(ItemStack.EMPTY);
+			ItemStack itemStack = ItemStackNbt.fromNbt(rm, compound).orElse(ItemStack.EMPTY);
 			if (j >= 0 && j < t.shared.main().size()) {
 				t.shared.main().set(j, itemStack);
 			} else if (j >= 100 && j < t.equipmentSlots.length + 100) {
