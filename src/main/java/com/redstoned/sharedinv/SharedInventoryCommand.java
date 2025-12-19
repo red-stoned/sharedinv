@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.mojang.authlib.GameProfile;
@@ -16,6 +17,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
@@ -136,8 +138,10 @@ public class SharedInventoryCommand {
 		inv.AddPlayer(context.getSource().getPlayer().getUuid());
 		context.getSource().getPlayer().getInventory().sharedinv$updateFrom(inv);
 
-		context.getSource().sendFeedback(() -> {
-			return Text.literal(String.format("%s is now sharing the inventory '%s'", context.getSource().getPlayer().getGameProfile().getName(), inv.name));
+		context.getSource().sendFeedback(new Supplier<Text>() {
+			public Text get() {
+				return Text.literal(String.format("%s is now sharing the inventory '%s'", context.getSource().getPlayer().getGameProfile().name(), inv.name));
+			}
 		}, true);
 
 		return 1;
@@ -151,15 +155,15 @@ public class SharedInventoryCommand {
 			return 0;
 		}
 
-		Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "player");
+		Collection<PlayerConfigEntry> profiles = GameProfileArgumentType.getProfileArgument(context, "player");
 		profiles.forEach(profile -> {
-			inv.AddPlayer(profile.getId());
-			context.getSource().getServer().getPlayerManager().getPlayer(profile.getId()).getInventory().sharedinv$updateFrom(inv);
+			inv.AddPlayer(profile.id());
+			context.getSource().getServer().getPlayerManager().getPlayer(profile.id()).getInventory().sharedinv$updateFrom(inv);
 		});
 		
 		if (profiles.size() == 1) {
 			context.getSource().sendFeedback(() -> {
-				return Text.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().orElseThrow().getName(), inv.name));
+				return Text.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().orElseThrow().name(), inv.name));
 			}, true);
 		} else {
 			context.getSource().sendFeedback(() -> {
@@ -170,18 +174,18 @@ public class SharedInventoryCommand {
 	}
 
 	public static int executeLeave(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "player");
+		Collection<PlayerConfigEntry> profiles = GameProfileArgumentType.getProfileArgument(context, "player");
 		profiles.forEach(profile -> {
-			SharedInventory inv = SharedInventory.playerInvs.get(profile.getId());
+			SharedInventory inv = SharedInventory.playerInvs.get(profile.id());
 			if (inv == null) return;
-			inv.RemovePlayer(profile.getId());
-			ServerPlayerEntity s = context.getSource().getServer().getPlayerManager().getPlayer(profile.getId());
+			inv.RemovePlayer(profile.id());
+			ServerPlayerEntity s = context.getSource().getServer().getPlayerManager().getPlayer(profile.id());
 			SharedInventoryMod.RestorePlayerSlots(s);
 		});
 		
 		if (profiles.size() == 1) {
 			context.getSource().sendFeedback(() -> {
-				return Text.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().orElseThrow().getName()));
+				return Text.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().orElseThrow().name()));
 			}, true);
 		} else {
 			context.getSource().sendFeedback(() -> {
@@ -232,8 +236,8 @@ public class SharedInventoryCommand {
 					inv.players.size() > 1 ? "s" : "",
 					inv.name,
 					inv.players.stream().map(u -> {
-						Optional<GameProfile> profile = context.getSource().getServer().getUserCache().getByUuid(u);
-						return profile.isPresent() ? profile.get().getName() : u.toString();
+						ServerPlayerEntity profile = context.getSource().getServer().getPlayerManager().getPlayer(u);
+						return profile != null ? profile.getName().toString() : u.toString();
 					}).collect(Collectors.joining(", "))
 				));
 			}, false);
