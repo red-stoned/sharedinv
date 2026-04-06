@@ -7,23 +7,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.authlib.GameProfile;
 import com.redstoned.sharedinv.SharedInventory;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+@Mixin(ServerPlayer.class)
+abstract public class ServerPlayerMixin extends Player {
 
-@Mixin(ServerPlayerEntity.class)
-abstract public class ServerPlayerMixin extends PlayerEntity {
-
-	public ServerPlayerMixin(World world, GameProfile gameProfile) {
+	public ServerPlayerMixin(Level world, GameProfile gameProfile) {
 		super(world, gameProfile);
 		//TODO Auto-generated constructor stub
 	}
 
-	@Inject(method = "copyFrom", at = @At("TAIL"))
-	public void resetInvRefs(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
-		var inv = SharedInventory.playerInvs.get(oldPlayer.getUuid());
+	@Inject(method = "restoreFrom", at = @At("TAIL"))
+	public void resetInvRefs(ServerPlayer oldPlayer, boolean alive, CallbackInfo ci) {
+		var inv = SharedInventory.playerInvs.get(oldPlayer.getUUID());
 		if (inv != null) {
 			getInventory().sharedinv$updateFrom(inv);
 		}

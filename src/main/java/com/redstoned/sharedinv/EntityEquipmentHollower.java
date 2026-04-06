@@ -2,10 +2,10 @@ package com.redstoned.sharedinv;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
-import net.minecraft.entity.EntityEquipment;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EntityEquipment;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -36,7 +36,7 @@ public class EntityEquipmentHollower implements Opcodes {
 
 	private static Wrap hollowed;
 
-	public static EntityEquipment wrap(EntityEquipment delegate, PlayerEntity player) {
+	public static EntityEquipment wrap(EntityEquipment delegate, Player player) {
 		if (hollowed == null) {
 			synchronized (EntityEquipmentHollower.class) {
 				if (hollowed == null) {
@@ -52,7 +52,7 @@ public class EntityEquipmentHollower implements Opcodes {
 	}
 
 	private interface Wrap {
-		EntityEquipment wrap(EntityEquipment delegate, PlayerEntity player);
+		EntityEquipment wrap(EntityEquipment delegate, Player player);
 	}
 
 	private static Wrap hollow() throws Throwable {
@@ -65,21 +65,21 @@ public class EntityEquipmentHollower implements Opcodes {
 		cw.visit(V21, ACC_PUBLIC | ACC_SUPER, cn, null, name(EntityEquipment.class), null);
 
 		cw.visitField(ACC_PRIVATE | ACC_FINAL, "delegate", lname(EntityEquipment.class), null, null).visitEnd();
-		cw.visitField(ACC_PRIVATE | ACC_FINAL, "player", lname(PlayerEntity.class), null, null).visitEnd();
+		cw.visitField(ACC_PRIVATE | ACC_FINAL, "player", lname(Player.class), null, null).visitEnd();
 
-		MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "<init>", desc(void.class, EntityEquipment.class, PlayerEntity.class), null, null);
+		MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "<init>", desc(void.class, EntityEquipment.class, Player.class), null, null);
 		mw.visitCode();
 		mw.visitVarInsn(ALOAD, 0);
 		mw.visitVarInsn(ALOAD, 1);
 		String fieldDesc = lname(EnumMap.class);
-		mw.visitFieldInsn(GETFIELD, name(EntityEquipment.class), mapField("field_55944", fieldDesc), fieldDesc);
+		mw.visitFieldInsn(GETFIELD, name(EntityEquipment.class), mapField("items", fieldDesc), fieldDesc);
 		mw.visitMethodInsn(INVOKESPECIAL, name(EntityEquipment.class), "<init>", desc(void.class, EnumMap.class), false);
 		mw.visitVarInsn(ALOAD, 0);
 		mw.visitInsn(DUP);
 		mw.visitVarInsn(ALOAD, 1);
 		mw.visitFieldInsn(PUTFIELD, cn, "delegate", lname(EntityEquipment.class));
 		mw.visitVarInsn(ALOAD, 2);
-		mw.visitFieldInsn(PUTFIELD, cn, "player", lname(PlayerEntity.class));
+		mw.visitFieldInsn(PUTFIELD, cn, "player", lname(Player.class));
 		mw.visitInsn(RETURN);
 		mw.visitMaxs(3, 3);
 		mw.visitEnd();
@@ -104,8 +104,8 @@ public class EntityEquipmentHollower implements Opcodes {
 				mw.visitVarInsn(ALOAD, 0);
 				mw.visitFieldInsn(GETFIELD, cn, "delegate", lname(EntityEquipment.class));
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, cn, "player", lname(PlayerEntity.class));
-				String hdesc = desc.replace(")", lname(EntityEquipment.class) + lname(PlayerEntity.class) + ")");
+				mw.visitFieldInsn(GETFIELD, cn, "player", lname(Player.class));
+				String hdesc = desc.replace(")", lname(EntityEquipment.class) + lname(Player.class) + ")");
 				mw.visitMethodInsn(INVOKESTATIC, name(EntityEquipmentHollower.class), handler, hdesc, false);
 				unhandledMethods.remove(handler);
 			}
@@ -131,9 +131,9 @@ public class EntityEquipmentHollower implements Opcodes {
 				lookup,
 				"wrap",
 				MethodType.methodType(Wrap.class),
-				MethodType.methodType(EntityEquipment.class, EntityEquipment.class, PlayerEntity.class),
+				MethodType.methodType(EntityEquipment.class, EntityEquipment.class, Player.class),
 				lookup.unreflectConstructor(clazz.getConstructors()[0]),
-				MethodType.methodType(clazz, EntityEquipment.class, PlayerEntity.class)
+				MethodType.methodType(clazz, EntityEquipment.class, Player.class)
 		).getTarget().invoke();
 	}
 
@@ -156,20 +156,20 @@ public class EntityEquipmentHollower implements Opcodes {
 
 	// This mirrors the methods in PlayerEquipment but with the player injected later
 	private static final Map<String, String> handled = Map.of(
-			mapMethod("method_66660", desc(ItemStack.class, EquipmentSlot.class, ItemStack.class)), "put",
-			mapMethod("method_66659", desc(ItemStack.class, EquipmentSlot.class)), "get",
-			mapMethod("method_66657", desc(boolean.class)), "isEmpty"
+			mapMethod("set", desc(ItemStack.class, EquipmentSlot.class, ItemStack.class)), "set",
+			mapMethod("get", desc(ItemStack.class, EquipmentSlot.class)), "get",
+			mapMethod("isEmpty", desc(boolean.class)), "isEmpty"
 	);
 
-	public static ItemStack put(EquipmentSlot slot, ItemStack stack, EntityEquipment delegate, PlayerEntity player) {
-		return slot == EquipmentSlot.MAINHAND ? player.getInventory().setSelectedStack(stack) : delegate.put(slot, stack);
+	public static ItemStack set(EquipmentSlot slot, ItemStack stack, EntityEquipment delegate, Player player) {
+		return slot == EquipmentSlot.MAINHAND ? player.getInventory().setSelectedItem(stack) : delegate.set(slot, stack);
 	}
 
-	public static ItemStack get(EquipmentSlot slot, EntityEquipment delegate, PlayerEntity player) {
-		return slot == EquipmentSlot.MAINHAND ? player.getInventory().getSelectedStack() : delegate.get(slot);
+	public static ItemStack get(EquipmentSlot slot, EntityEquipment delegate, Player player) {
+		return slot == EquipmentSlot.MAINHAND ? player.getInventory().getSelectedItem() : delegate.get(slot);
 	}
 
-	public static boolean isEmpty(EntityEquipment delegate, PlayerEntity player) {
-		return player.getInventory().getSelectedStack().isEmpty() && delegate.isEmpty();
+	public static boolean isEmpty(EntityEquipment delegate, Player player) {
+		return player.getInventory().getSelectedItem().isEmpty() && delegate.isEmpty();
 	}
 }

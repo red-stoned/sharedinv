@@ -26,15 +26,8 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.16.10",
-		"minecraft": "~1.21.11",
-		"java": ">=21",
+		"minecraft": "~26.1",
 		"fabric-api": "*"
 	},
-	"accessWidener": "sharedinv.accesswidener",
-	"custom": {
-		"loom:injected_interfaces": {
-			"net/minecraft/class_1661": ["com/redstoned/sharedinv/IPlayerInventory"],
-			"net/minecraft/class_1309": ["com/redstoned/sharedinv/mixin/LivingEntityAccessor"]
-		}
-	}
+	"accessWidener": "sharedinv.classtweaker"
 }

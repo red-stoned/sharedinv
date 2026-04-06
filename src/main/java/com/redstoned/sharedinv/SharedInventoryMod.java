@@ -3,13 +3,12 @@ package com.redstoned.sharedinv;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.server.MinecraftServer;
-
+import net.minecraft.world.entity.player.Player;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -30,8 +29,8 @@ public class SharedInventoryMod implements ModInitializer {
 	public static Object2ReferenceMap<UUID, IPlayerInventory.SavedInventory> originalInventories = new Object2ReferenceOpenHashMap<>();
 	public static SharedInventory default_inv = null;
 
-	public static void RestorePlayerSlots(PlayerEntity player) {
-		var originalInv = originalInventories.get(player.getUuid());
+	public static void RestorePlayerSlots(Player player) {
+		var originalInv = originalInventories.get(player.getUUID());
 		if (originalInv == null) {
 			player.getInventory().sharedinv$clear();
 		} else {
@@ -41,11 +40,11 @@ public class SharedInventoryMod implements ModInitializer {
 
 	public static void Save(MinecraftServer server) {
 		try {
-			NbtCompound root = new NbtCompound();
-			NbtList l = new NbtList();
+			CompoundTag root = new CompoundTag();
+			ListTag l = new ListTag();
 			inventories.forEach((name, inv) -> {
-				NbtCompound i = new NbtCompound();
-				l.add(inv.toNbt(server.getRegistryManager(), i));
+				CompoundTag i = new CompoundTag();
+				l.add(inv.toNbt(server.registryAccess(), i));
 			});
 
 			root.put("i", l);
@@ -53,14 +52,14 @@ public class SharedInventoryMod implements ModInitializer {
 				root.putString("d", default_inv.name);
 			}
 			
-			NbtIo.writeCompressed(root, server.session.getDirectory().path().resolve("sharedinv.nbt"));
+			NbtIo.writeCompressed(root, server.storageSource.getLevelDirectory().path().resolve("sharedinv.nbt"));
 		} catch (Exception e) {
 			LOGGER.error("Failed to save Shared Inventory", e);
 		}
 	}
 
 	private static void Load(MinecraftServer server) {
-		Path ipath = server.session.getDirectory().path().resolve("sharedinv.nbt");
+		Path ipath = server.storageSource.getLevelDirectory().path().resolve("sharedinv.nbt");
 		if (!Files.exists(ipath)) {
 			// LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
 
@@ -71,10 +70,10 @@ public class SharedInventoryMod implements ModInitializer {
 		};
 		
 		try {
-			NbtCompound nbt = NbtIo.readCompressed(ipath, NbtSizeTracker.ofUnlimitedBytes());
-			NbtList nt = nbt.getList("i").orElseThrow();
+			CompoundTag nbt = NbtIo.readCompressed(ipath, NbtAccounter.unlimitedHeap());
+			ListTag nt = nbt.getList("i").orElseThrow();
 			for (int i = 0; i < nt.size(); ++i) {
-				SharedInventory inv = SharedInventory.fromNbt(server.getRegistryManager(), nt.getCompound(i).orElseThrow());
+				SharedInventory inv = SharedInventory.fromNbt(server.registryAccess(), nt.getCompound(i).orElseThrow());
 				// LOGGER.info("[DEBUG] Loaded shared inv: " + inv.name);
 				inventories.put(inv.name, inv);
 			}
@@ -100,13 +99,13 @@ public class SharedInventoryMod implements ModInitializer {
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-			originalInventories.put(handler.getPlayer().getUuid(), handler.getPlayer().getInventory().sharedinv$save());
+			originalInventories.put(handler.getPlayer().getUUID(), handler.getPlayer().getInventory().sharedinv$save());
 
-			SharedInventory inv = SharedInventory.playerInvs.get(handler.getPlayer().getUuid());
+			SharedInventory inv = SharedInventory.playerInvs.get(handler.getPlayer().getUUID());
 			if (inv == null) {
 				if (default_inv == null) return;
 				
-				default_inv.AddPlayer(handler.getPlayer().getUuid());
+				default_inv.AddPlayer(handler.getPlayer().getUUID());
 				// LOGGER.info(String.format("[DEBUG] Adding %s to default team %s", handler.getPlayer().getGameProfile().getName(), default_inv.name));
 				inv = default_inv;
 			}

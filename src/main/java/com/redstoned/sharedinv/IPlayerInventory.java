@@ -1,8 +1,8 @@
 package com.redstoned.sharedinv;
 
-import net.minecraft.entity.EntityEquipment;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.entity.EntityEquipment;
+import net.minecraft.world.item.ItemStack;
 
 public interface IPlayerInventory {
 	default void sharedinv$updateFrom(SharedInventory inv) {
@@ -18,5 +18,5 @@ public interface IPlayerInventory {
 		throw new UnsupportedOperationException("This method should be overridden in the mixin");
 	}
 
-	record SavedInventory(DefaultedList<ItemStack> main, EntityEquipment equipment) { }
+	record SavedInventory(NonNullList<ItemStack> main, EntityEquipment equipment) { }
 }

@@ -1,0 +1,7 @@
+classTweaker v1 official
+accessible method net/minecraft/world/entity/EntityEquipment <init> (Ljava/util/EnumMap;)V
+accessible field net/minecraft/world/entity/EntityEquipment items Ljava/util/EnumMap;
+accessible field net/minecraft/server/MinecraftServer storageSource Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;
+
+inject-interface net/minecraft/world/entity/LivingEntity com/redstoned/sharedinv/mixin/LivingEntityAccessor
+inject-interface net/minecraft/world/entity/player/Inventory com/redstoned/sharedinv/IPlayerInventory
