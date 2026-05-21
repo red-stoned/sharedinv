@@ -13,20 +13,11 @@ import org.objectweb.asm.Opcodes;
 import java.lang.invoke.*;
 import java.lang.reflect.AccessFlag;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class EntityEquipmentHollower implements Opcodes {
-	private static final MappingResolver mr = FabricLoader.getInstance().getMappingResolver();
-	private static final String iName = mr.unmapClassName("intermediary", EntityEquipment.class.getName());
-
-	private static String mapMethod(String methodName, String descriptor) {
-		return mr.mapMethodName("intermediary", iName, methodName, descriptor);
-	}
-
-	private static String mapField(String fieldName, String descriptor) {
-		return mr.mapFieldName("intermediary", iName, fieldName, descriptor);
-	}
-
 	private static String desc(Class<?> result, Class<?>... in) {
 		StringBuilder sb = new StringBuilder("(");
 		for (Class<?> c : in) sb.append(lname(c));
@@ -72,7 +63,7 @@ public class EntityEquipmentHollower implements Opcodes {
 		mw.visitVarInsn(ALOAD, 0);
 		mw.visitVarInsn(ALOAD, 1);
 		String fieldDesc = lname(EnumMap.class);
-		mw.visitFieldInsn(GETFIELD, name(EntityEquipment.class), mapField("items", fieldDesc), fieldDesc);
+		mw.visitFieldInsn(GETFIELD, name(EntityEquipment.class), "items", fieldDesc);
 		mw.visitMethodInsn(INVOKESPECIAL, name(EntityEquipment.class), "<init>", desc(void.class, EnumMap.class), false);
 		mw.visitVarInsn(ALOAD, 0);
 		mw.visitInsn(DUP);
@@ -84,13 +75,13 @@ public class EntityEquipmentHollower implements Opcodes {
 		mw.visitMaxs(3, 3);
 		mw.visitEnd();
 
-		Set<String> unhandledMethods = new HashSet<>(handled.values());
+		Set<String> unhandledMethods = new HashSet<>(handled);
 
 		for (Method method : methods) {
 			String desc = desc(method.getReturnType(), method.getParameterTypes());
 			mw = cw.visitMethod(ACC_PUBLIC, method.getName(), desc, null, null);
 			mw.visitCode();
-			String handler = handled.get(method.getName());
+			String handler = handled.contains(method.getName()) ? method.getName() : null;
 			if (handler == null) {
 				mw.visitVarInsn(ALOAD, 0);
 				mw.visitFieldInsn(GETFIELD, cn, "delegate", lname(EntityEquipment.class));
@@ -155,10 +146,10 @@ public class EntityEquipmentHollower implements Opcodes {
 
 
 	// This mirrors the methods in PlayerEquipment but with the player injected later
-	private static final Map<String, String> handled = Map.of(
-			mapMethod("set", desc(ItemStack.class, EquipmentSlot.class, ItemStack.class)), "set",
-			mapMethod("get", desc(ItemStack.class, EquipmentSlot.class)), "get",
-			mapMethod("isEmpty", desc(boolean.class)), "isEmpty"
+	private static final Set<String> handled = Set.of(
+		"set",
+		"get",
+		"isEmpty"
 	);
 
 	public static ItemStack set(EquipmentSlot slot, ItemStack stack, EntityEquipment delegate, Player player) {
