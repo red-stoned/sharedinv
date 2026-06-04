@@ -25,7 +25,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"modid" {
+		"sharedinv" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
