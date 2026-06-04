@@ -6,7 +6,8 @@
 		"LivingEntityAccessor",
 		"PlayerInventoryMixin",
 		"PlayerManagerMixin",
-		"ServerPlayerMixin"
+		"ServerPlayerMixin",
+		"PlayerDataStorageMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

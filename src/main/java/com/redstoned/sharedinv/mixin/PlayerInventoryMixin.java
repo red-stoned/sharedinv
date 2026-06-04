@@ -21,23 +21,6 @@ public class PlayerInventoryMixin implements IPlayerInventory {
 	@Mutable @Final @Shadow private NonNullList<ItemStack> items;
 	@Mutable @Shadow @Final private EntityEquipment equipment;
 
-	@Inject(method = "save", at = @At("HEAD"))
-	private void inplaceOriginalInventoryOnWrite(ValueOutput.TypedOutputList<ItemStackWithSlot> list, CallbackInfo ci) {
-		if (SharedInventory.playerInvs.containsKey(player.getUUID())) {
-			// SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at begin write time, resetting their inv to point to the original");
-			SharedInventoryMod.RestorePlayerSlots(player);
-		}
-	}
-
-	@Inject(method = "save", at = @At("TAIL"))
-	private void rejoinTeamAfterWriteInventory(ValueOutput.TypedOutputList<ItemStackWithSlot> list, CallbackInfo ci) {
-		SharedInventory inv = SharedInventory.playerInvs.get(player.getUUID());
-		if (inv != null) {
-			// SharedInventoryMod.LOGGER.info("[DEBUG] Player is in team at end write time, resetting their inv to point to the shared");
-			player.getInventory().sharedinv$updateFrom(inv);
-		}
-	}
-
 	@Override
 	public void sharedinv$updateFrom(SharedInventory inv) {
 		sharedinv$restore(new SavedInventory(
