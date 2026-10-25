@@ -3,16 +3,14 @@ package com.redstoned.sharedinv;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtAccounter;
-import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,16 +50,16 @@ public class SharedInventoryMod implements ModInitializer {
 				root.putString("d", default_inv.name);
 			}
 			
-			NbtIo.writeCompressed(root, server.storageSource.getLevelDirectory().path().resolve("sharedinv.nbt"));
+			NbtIo.writeCompressed(root, server.getWorldPath(LevelResource.ROOT).resolve("sharedinv.nbt").toFile());
 		} catch (Exception e) {
 			LOGGER.error("Failed to save Shared Inventory", e);
 		}
 	}
 
 	private static void Load(MinecraftServer server) {
-		Path ipath = server.storageSource.getLevelDirectory().path().resolve("sharedinv.nbt");
+		Path ipath = server.getWorldPath(LevelResource.ROOT).resolve("sharedinv.nbt");
 		if (!Files.exists(ipath)) {
-			// LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
+			//LOGGER.info("Could not find inventory state, defaulting to single shared inventory.");
 
 			default_inv = new SharedInventory("group_1");
 			SharedInventoryMod.inventories.put(default_inv.name, default_inv);
@@ -70,15 +68,15 @@ public class SharedInventoryMod implements ModInitializer {
 		};
 		
 		try {
-			CompoundTag nbt = NbtIo.readCompressed(ipath, NbtAccounter.unlimitedHeap());
-			ListTag nt = nbt.getList("i").orElseThrow();
+			CompoundTag nbt = NbtIo.readCompressed(ipath.toFile());
+			ListTag nt = nbt.getList("i", Tag.TAG_COMPOUND);
 			for (int i = 0; i < nt.size(); ++i) {
-				SharedInventory inv = SharedInventory.fromNbt(server.registryAccess(), nt.getCompound(i).orElseThrow());
-				// LOGGER.info("[DEBUG] Loaded shared inv: " + inv.name);
+				SharedInventory inv = SharedInventory.fromNbt(server.registryAccess(), nt.getCompound(i));
+                //LOGGER.info("[DEBUG] Loaded shared inv: {}", inv.name);
 				inventories.put(inv.name, inv);
 			}
 
-			String def_name = nbt.getString("d").orElseThrow();
+			String def_name = nbt.getString("d");
 			SharedInventory def = inventories.get(def_name);
 			if (!def_name.isEmpty() && def != null) {
 				default_inv = def;
@@ -91,12 +89,8 @@ public class SharedInventoryMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		ServerLifecycleEvents.BEFORE_SAVE.register((server, flush, force) -> {
-			Save(server);
-		});
-		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-			Load(server);
-		});
+		ServerLifecycleEvents.SERVER_STOPPING.register(SharedInventoryMod::Save);
+		ServerLifecycleEvents.SERVER_STARTING.register(SharedInventoryMod::Load);
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			originalInventories.put(handler.getPlayer().getUUID(), handler.getPlayer().getInventory().sharedinv$save());
@@ -106,7 +100,7 @@ public class SharedInventoryMod implements ModInitializer {
 				if (default_inv == null) return;
 				
 				default_inv.AddPlayer(handler.getPlayer().getUUID());
-				// LOGGER.info(String.format("[DEBUG] Adding %s to default team %s", handler.getPlayer().getGameProfile().getName(), default_inv.name));
+				 //LOGGER.info("[DEBUG] Adding {} to default team {}", handler.getPlayer().getGameProfile().getName(), default_inv.name);
 				inv = default_inv;
 			}
 

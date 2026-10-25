@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PlayerManagerMixin {
     @Inject(method = "remove", at = @At("TAIL"))
     void removeOriginalInvOnDisconnect(ServerPlayer player, CallbackInfo ci) {
-        //SharedInventoryMod.LOGGER.info("[DEBUG] Removing {}'s original inventory", player.getNameForScoreboard());
+        //SharedInventoryMod.LOGGER.info("[DEBUG] Removing {}'s original inventory", player.getScoreboardName());
         SharedInventoryMod.originalInventories.remove(player.getUUID());
     }
 }

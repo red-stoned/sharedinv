@@ -1,12 +1,11 @@
 package com.redstoned.sharedinv;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -22,31 +21,24 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.NameAndId;
 
 import static net.minecraft.commands.Commands.*;
 
 public class SharedInventoryCommand {
-	public static SuggestionProvider<CommandSourceStack> inventories_provider = (context, builder) -> {
-		return SharedSuggestionProvider.suggest(SharedInventoryMod.inventories.keySet().toArray(String[]::new), builder);
-	};
-
-	
+	public static SuggestionProvider<CommandSourceStack> inventories_provider = (context, builder) -> SharedSuggestionProvider.suggest(SharedInventoryMod.inventories.keySet().toArray(String[]::new), builder);
 
 	public static void register() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(
 				literal("sharedinv")
-				.requires(Commands.hasPermission(Commands.LEVEL_MODERATORS))
+				.requires(c -> c.hasPermission(Commands.LEVEL_MODERATORS))
 				.then(literal("help")
 				.executes(context -> {
-					context.getSource().sendSuccess(() -> {
-						return Component.literal("Find help at: ").append(Component.literal("https://modrinth.com/mod/sharedinv").setStyle(Style.EMPTY
-								.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://modrinth.com/mod/sharedinv")))
-								.withUnderlined(true)
-								.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to open the Shared Inventory mod page on Modrinth")))
-						));
-					}, false);
+					context.getSource().sendSuccess(() -> Component.literal("Find help at: ").append(Component.literal("https://modrinth.com/mod/sharedinv").setStyle(Style.EMPTY
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://modrinth.com/mod/sharedinv"))
+                            .withUnderlined(true)
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to open the Shared Inventory mod page on Modrinth")))
+                    )), false);
 					return 1;
 				}))
 				.then(literal("group")
@@ -139,11 +131,7 @@ public class SharedInventoryCommand {
 		inv.AddPlayer(context.getSource().getPlayer().getUUID());
 		context.getSource().getPlayer().getInventory().sharedinv$updateFrom(inv);
 
-		context.getSource().sendSuccess(new Supplier<Component>() {
-			public Component get() {
-				return Component.literal(String.format("%s is now sharing the inventory '%s'", context.getSource().getPlayer().getGameProfile().name(), inv.name));
-			}
-		}, true);
+		context.getSource().sendSuccess(() -> Component.literal(String.format("%s is now sharing the inventory '%s'", context.getSource().getPlayer().getGameProfile().getName(), inv.name)), true);
 
 		return 1;
 	}
@@ -156,14 +144,14 @@ public class SharedInventoryCommand {
 			return 0;
 		}
 
-		Collection<NameAndId> profiles = GameProfileArgument.getGameProfiles(context, "player");
+		Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(context, "player");
 		profiles.forEach(profile -> {
-			inv.AddPlayer(profile.id());
-			context.getSource().getServer().getPlayerList().getPlayer(profile.id()).getInventory().sharedinv$updateFrom(inv);
+			inv.AddPlayer(profile.getId());
+			context.getSource().getServer().getPlayerList().getPlayer(profile.getId()).getInventory().sharedinv$updateFrom(inv);
 		});
 		
 		if (profiles.size() == 1) {
-			context.getSource().sendSuccess(() -> Component.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().orElseThrow().name(), inv.name)), true);
+			context.getSource().sendSuccess(() -> Component.literal(String.format("%s is now sharing the inventory '%s'", profiles.stream().findFirst().orElseThrow().getName(), inv.name)), true);
 		} else {
 			context.getSource().sendSuccess(() -> Component.literal(String.format("Shared inventory '%s' with %d players", inv.name, profiles.size())), true);
 		}
@@ -171,23 +159,19 @@ public class SharedInventoryCommand {
 	}
 
 	public static int executeLeave(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-		Collection<NameAndId> profiles = GameProfileArgument.getGameProfiles(context, "player");
+		Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(context, "player");
 		profiles.forEach(profile -> {
-			SharedInventory inv = SharedInventory.playerInvs.get(profile.id());
+			SharedInventory inv = SharedInventory.playerInvs.get(profile.getId());
 			if (inv == null) return;
-			inv.RemovePlayer(profile.id());
-			ServerPlayer s = context.getSource().getServer().getPlayerList().getPlayer(profile.id());
+			inv.RemovePlayer(profile.getId());
+			ServerPlayer s = context.getSource().getServer().getPlayerList().getPlayer(profile.getId());
 			SharedInventoryMod.RestorePlayerSlots(s);
 		});
 		
 		if (profiles.size() == 1) {
-			context.getSource().sendSuccess(() -> {
-				return Component.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().orElseThrow().name()));
-			}, true);
+			context.getSource().sendSuccess(() -> Component.literal(String.format("%s is no longer sharing an inventory", profiles.stream().findFirst().orElseThrow().getName())), true);
 		} else {
-			context.getSource().sendSuccess(() -> {
-				return Component.literal(String.format("%d players are no longer sharing an inventory", profiles.size()));
-			}, true);
+			context.getSource().sendSuccess(() -> Component.literal(String.format("%d players are no longer sharing an inventory", profiles.size())), true);
 		}
 		return 1;
 	}
@@ -233,7 +217,7 @@ public class SharedInventoryCommand {
 					.stream()
 					// todo(piz) this probably should use Services.profileResolver
 					//  butttttt i really dont like the network request so
-					.map(u -> context.getSource().getServer().services().nameToIdCache().get(u).map(NameAndId::name).orElseGet(u::toString))
+					.map(u -> context.getSource().getServer().getProfileCache().get(u).get().getName())
 					.collect(Collectors.joining(", "))
             )), false);
 		}

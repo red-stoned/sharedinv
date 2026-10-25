@@ -1,5 +1,6 @@
 package com.redstoned.sharedinv.mixin;
 
+import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,8 +15,8 @@ import net.minecraft.world.level.Level;
 @Mixin(ServerPlayer.class)
 abstract public class ServerPlayerMixin extends Player {
 
-	public ServerPlayerMixin(Level world, GameProfile gameProfile) {
-		super(world, gameProfile);
+	public ServerPlayerMixin(Level world, BlockPos pos, float f, GameProfile gameProfile) {
+		super(world, pos, f, gameProfile);
 		//TODO Auto-generated constructor stub
 	}
 
